@@ -11,3 +11,4 @@ spec:
       targetPort: 9000
   selector:
     app: pnr-resequencer-service-pod
+  type: LoadBalancer
