@@ -6,7 +6,8 @@ metadata:
     app: pnr-resequencer-service
 spec:
   ports:
-    - name: "pnr-resequencer-service"
-      port: 9000
+    - protocol: TCP
+      port: 80
+      targetPort: 9000
   selector:
     app: pnr-resequencer-service-pod
