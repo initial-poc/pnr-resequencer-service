@@ -13,6 +13,6 @@ spec:
         app: pnr-resequencer-service-pod
     spec:
       containers:
-        - image: gcr.io/pnr-order-poc/spanner-poller-converter-publisher:latest
+        - image: gcr.io/pnr-order-poc/pnr-resequencer-service:latest
           name: pnr-resequencer-service
             
