@@ -4,18 +4,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum RecordStatus {
-	IN_PROGESS("1", "Record is in progess"), RELEASED("2", "Record is released"), COMPLETED("3", "Record is completed"),
-	FAILED("4", "Record process is faild");
+	IN_PROGESS(1, "Record is in progess"), RELEASED(2, "Record is released"), COMPLETED(3, "Record is completed"),
+	FAILED(4, "Record process is faild");
 
-	private final String statusCode;
+	private final int statusCode;
 	private final String statusMessage;
 
-	private RecordStatus(final String statusCode, final String statusMessage) {
+	private RecordStatus(final int statusCode, final String statusMessage) {
 		this.statusCode = statusCode;
 		this.statusMessage = statusMessage;
 	}
 
-	public String getStatusCode() {
+	public int getStatusCode() {
 		return statusCode;
 	}
 
@@ -23,7 +23,7 @@ public enum RecordStatus {
 		return statusMessage;
 	}
 
-	private static final Map<String, RecordStatus> lookUp = new HashMap<>();
+	private static final Map<Integer, RecordStatus> lookUp = new HashMap<>();
 
 	static {
 		for (RecordStatus d : RecordStatus.values()) {
@@ -31,7 +31,7 @@ public enum RecordStatus {
 		}
 	}
 
-	public static RecordStatus getStatusMessage(final String statusCode) {
+	public static RecordStatus getStatusMessage(final int statusCode) {
 		return lookUp.get(statusCode);
 	}
 

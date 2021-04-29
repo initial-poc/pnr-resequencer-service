@@ -1,9 +1,9 @@
 package com.infogain.gcp.poc.component;
 
 import java.net.InetAddress;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+//github.com/initial-poc/pnr-resequencer-service.git
 import org.springframework.stereotype.Component;
 
 import com.infogain.gcp.poc.domainmodel.PNRModel;
@@ -20,9 +20,6 @@ public class PNRMessageGroupStore {
 	private final GroupMessageStoreRepository groupMessageStoreRepository;
 	private final String ip ;
 	
- 
-	
-	
 	@Autowired
 	@SneakyThrows
 	public PNRMessageGroupStore(GroupMessageStoreRepository groupMessageStoreRepository) {
@@ -38,21 +35,16 @@ public class PNRMessageGroupStore {
 		log.info("saving message {}", pnrEntity);
 		groupMessageStoreRepository.save(pnrEntity);
 		return pnrEntity;
-
 	}
 
-	public void releaseMessage(List<PNREntity> pnrEntity) {
-		log.info("Going to update table as released for messages {}", pnrEntity);
-
-		pnrEntity.stream().forEach(entity -> {
-			entity.setStatus(RecordStatus.RELEASED.getStatusCode());
+	public void updateStatus(PNREntity entity, int status) {
+		log.info("Going to update the status in table as  {} for record ->{} ", status,entity);
+			entity.setStatus(status);
 			entity.setInstance(ip);
 			groupMessageStoreRepository.getSpannerTemplate().update(entity);
-		});
-
+		 
 	}
-	
-	
+
 	public PNREntity getMessageById(PNRModel pnrModel) {
 		PNREntity entity=null;
 		entity=groupMessageStoreRepository.findByPnridAndMessageseq(pnrModel.getPnrid(),String.valueOf(pnrModel.getMessageseq()));
