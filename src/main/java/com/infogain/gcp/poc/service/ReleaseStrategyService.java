@@ -33,7 +33,7 @@ public class ReleaseStrategyService {
 		List<PNREntity> returnList = new ArrayList<PNREntity>();
 
 		Map<Integer, Boolean> seqReleasedStatusMap = pnrList.stream()
-				.collect(Collectors.toMap(PNREntity::getMessageseq, x -> false));
+				.collect(Collectors.toMap(PNREntity::getMessageseq, x -> x.getStatus().equals(AppConstant.RELEASED) ? true : false));
 		Map<Integer, PNREntity> seqPNREntityMap = pnrList.stream()
 				.collect(Collectors.toMap(PNREntity::getMessageseq, x -> x));
 
@@ -43,17 +43,19 @@ public class ReleaseStrategyService {
 				returnList.add(seqPNREntityMap.get(1));
 			}
 		}
+
 		log.info("seqReleasedStatusMap {}", seqReleasedStatusMap);
 		log.info("seqPNREntityMap {}", seqPNREntityMap);
-		pnrList.stream().sorted()
-				.filter(x -> seqPNREntityMap.get(x.getMessageseq() - 1) != null
-						? seqReleasedStatusMap.put(x.getMessageseq(), true) || true
-						: false)
-				.filter(y -> !y.getStatus().equals(AppConstant.RELEASED))
-				.filter(u -> (seqReleasedStatusMap.get(u.getMessageseq() - 1)
-						|| seqPNREntityMap.get(u.getMessageseq() - 1).getStatus().equals(AppConstant.RELEASED)))
-				.peek(System.out::println).forEach(z -> returnList.add(z));
-log.info("returning the list {}",returnList);
+
+		pnrList.stream().sorted().
+				filter(x -> Optional.ofNullable(seqReleasedStatusMap.get((x.getMessageseq()) - 1)).isPresent()).
+				filter(x -> !seqPNREntityMap.get(x.getMessageseq()).getStatus().equals(AppConstant.RELEASED))
+				.forEach(x -> {
+					seqReleasedStatusMap.put(x.getMessageseq(), true);
+					returnList.add(x);
+				});
+
+		log.info("returning the list {}", returnList);
 		return returnList;
 	}
 }
