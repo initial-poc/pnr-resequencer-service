@@ -26,18 +26,19 @@ public class PNRSequencingService {
 
 	public String processPNR(PNRModel pnrModel) {
 
-		PNREntity entity = messageGroupStore.getMessageById(pnrModel);
-		if (entity == null || entity.getStatus().equals(RecordStatus.FAILED.getStatusCode())) {
+		PNREntity pnrEntity = messageGroupStore.getMessageById(pnrModel);
+		if (pnrEntity == null || pnrEntity.getStatus().equals(RecordStatus.FAILED.getStatusCode())) {
 
-			PNREntity pnrEntity = messageGroupStore.addMessage(pnrModel);
+			  pnrEntity = messageGroupStore.addMessage(pnrModel);
 			List<PNREntity> toReleaseMessage = releaseStrategyService.release(pnrEntity);
 			publishMessage(toReleaseMessage);
+			pnrEntity.setStatus(RecordStatus.RELEASED.getStatusCode());
 		} else {
-			log.info("record is already in db and its status is {}",entity.getStatus());
+			log.info("record is already in db and its status is {}",pnrEntity.getStatus());
 		}
  
 		log.info("process completed");
-		return RecordStatus.getStatusMessage(entity.getStatus()).toString();
+		return RecordStatus.getStatusMessage(pnrEntity.getStatus()).toString();
 	}
 	
 	private void publishMessage(List<PNREntity> toReleaseMessage) {
