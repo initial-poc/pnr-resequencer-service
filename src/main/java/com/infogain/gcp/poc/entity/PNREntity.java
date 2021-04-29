@@ -26,20 +26,20 @@ public class PNREntity implements Comparable<PNREntity>{
     @PrimaryKey(keyOrder = 1)
     @Column(name = "pnrid")
     private String pnrid;
+
     @PrimaryKey(keyOrder = 2)
     @Column(name = "messageseq")
     private Integer messageseq;
 
     @Column(name = "status")
-    private String status;
+    private Integer status;
 
     @Column(name = "payload")
     private String payload;
 
     @Column(name = "timestamp")
     private Timestamp timestamp;
-    
-    
+
     @Column(name = "instance")
     private String instance;
 

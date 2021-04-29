@@ -2,9 +2,11 @@ package com.infogain.gcp.poc.component;
 
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gcp.pubsub.core.PubSubTemplate;
 import org.springframework.stereotype.Component;
 
 import com.infogain.gcp.poc.domainmodel.PNRModel;
@@ -20,9 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 public class PNRMessageGroupStore {
 	private final GroupMessageStoreRepository groupMessageStoreRepository;
 	private final String ip ;
-	
- 
-	
+
+	@Value("${app.topic.name}")
+	private String topicName;
+
+	@Autowired
+	private PubSubTemplate pubSubTemplate;
 	
 	@Autowired
 	@SneakyThrows
@@ -40,18 +45,21 @@ public class PNRMessageGroupStore {
 
 		groupMessageStoreRepository.getSpannerTemplate().insert(pnrEntity);
 		return pnrEntity;
-
 	}
 
 	public void releaseMessage(List<PNREntity> pnrEntity) {
 		log.info("Going to update table as released for messages {}", pnrEntity);
-
 		pnrEntity.stream().forEach(entity -> {
 			entity.setStatus(AppConstant.RELEASED);
 			entity.setInstance(ip);
 			groupMessageStoreRepository.getSpannerTemplate().update(entity);
 		});
+	}
 
+	public void publishMessage(String message, Map<String, String> attributes) {
+		log.info("publishing message {} to topic {}", message, topicName);
+		pubSubTemplate.publish(topicName, message, attributes);
+		log.info("published message {} to topic {}", message, topicName);
 	}
 
 }
