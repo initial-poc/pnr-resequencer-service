@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum RecordStatus {
-	IN_PROGESS(1, "Record is in progess"), RELEASED(2, "Record is released"), COMPLETED(3, "Record is completed"),
+	IN_PROGRESS(1, "Record is in progess"), RELEASED(2, "Record is released"), COMPLETED(3, "Record is completed"),
 	FAILED(4, "Record process is faild");
 
 	private final int statusCode;

@@ -30,7 +30,7 @@ public class PNRMessageGroupStore {
 
 	public PNREntity addMessage(PNRModel pnrModel) {
 		PNREntity pnrEntity = pnrModel.buildEntity();
-		pnrEntity.setStatus(RecordStatus.IN_PROGESS.getStatusCode());
+		pnrEntity.setStatus(RecordStatus.IN_PROGRESS.getStatusCode());
 		pnrEntity.setInstance(ip);
 		log.info("saving message {}", pnrEntity);
 		groupMessageStoreRepository.save(pnrEntity);
