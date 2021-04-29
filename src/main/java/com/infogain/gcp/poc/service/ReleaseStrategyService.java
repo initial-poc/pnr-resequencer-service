@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.infogain.gcp.poc.entity.PNREntity;
 import com.infogain.gcp.poc.poller.repository.GroupMessageStoreRepository;
-import com.infogain.gcp.poc.util.AppConstant;
+import com.infogain.gcp.poc.util.RecordStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class ReleaseStrategyService {
 
 		if (Optional.ofNullable(seqReleasedStatusMap.get(1)).isPresent()) {
 			seqReleasedStatusMap.put(1, true);
-			if (!seqPNREntityMap.get(1).getStatus().equals(AppConstant.RELEASED)) {
+			if (!seqPNREntityMap.get(1).getStatus().equals(RecordStatus.RELEASED.getStatusCode())) {
 				returnList.add(seqPNREntityMap.get(1));
 			}
 		}
@@ -49,9 +49,9 @@ public class ReleaseStrategyService {
 				.filter(x -> seqPNREntityMap.get(x.getMessageseq() - 1) != null
 						? seqReleasedStatusMap.put(x.getMessageseq(), true) || true
 						: false)
-				.filter(y -> !y.getStatus().equals(AppConstant.RELEASED))
+				.filter(y -> !y.getStatus().equals(RecordStatus.RELEASED.getStatusCode()))
 				.filter(u -> (seqReleasedStatusMap.get(u.getMessageseq() - 1)
-						|| seqPNREntityMap.get(u.getMessageseq() - 1).getStatus().equals(AppConstant.RELEASED)))
+						|| seqPNREntityMap.get(u.getMessageseq() - 1).getStatus().equals(RecordStatus.RELEASED.getStatusCode())))
 				.peek(System.out::println).forEach(z -> returnList.add(z));
 log.info("returning the list {}",returnList);
 		return returnList;

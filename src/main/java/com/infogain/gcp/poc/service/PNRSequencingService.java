@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.infogain.gcp.poc.component.PNRMessageGroupStore;
 import com.infogain.gcp.poc.domainmodel.PNRModel;
 import com.infogain.gcp.poc.entity.PNREntity;
+import com.infogain.gcp.poc.util.RecordStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,20 +16,25 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class PNRSequencingService {
-	
+
 	private final PNRMessageGroupStore messageGroupStore;
-	
+
 	private final ReleaseStrategyService releaseStrategyService;
 
-	//@Transactional(   rollbackFor = RuntimeException.class)
-	public void processPNR(PNRModel pnrModel) {
-		PNREntity pnrEntity = messageGroupStore.addMessage(pnrModel);
-		List<PNREntity> toReleaseMessage = releaseStrategyService.release(pnrEntity);
-		messageGroupStore.releaseMessage(toReleaseMessage);
+	public String processPNR(PNRModel pnrModel) {
+
+		PNREntity entity = messageGroupStore.getMessageById(pnrModel);
+		if (entity == null || entity.getStatus().equals(RecordStatus.FAILED.getStatusCode())) {
+
+			PNREntity pnrEntity = messageGroupStore.addMessage(pnrModel);
+			List<PNREntity> toReleaseMessage = releaseStrategyService.release(pnrEntity);
+			messageGroupStore.releaseMessage(toReleaseMessage);
+		
+		} else {
+			log.info("record is already in db and its status is {}",entity.getStatus());
+		}
 		log.info("process completed");
+		return RecordStatus.getStatusMessage(entity.getStatus()).toString();
 	}
-	
-	
-	
-	
+
 }
