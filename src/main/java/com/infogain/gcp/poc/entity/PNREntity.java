@@ -43,6 +43,10 @@ public class PNREntity implements Comparable<PNREntity>{
     @Column(name = "instance")
     private String instance;
 
+    private int retry_count;
+
+    private Timestamp updated;
+
     @SneakyThrows
     public PNRModel buildModel() {
         PNRModel pnrModel = new PNRModel();

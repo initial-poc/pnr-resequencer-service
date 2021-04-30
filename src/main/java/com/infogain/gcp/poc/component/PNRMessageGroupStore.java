@@ -2,6 +2,8 @@ package com.infogain.gcp.poc.component;
 
 import java.net.InetAddress;
 
+import com.google.cloud.Timestamp;
+import com.sun.tools.corba.se.idl.constExpr.Times;
 import org.springframework.beans.factory.annotation.Autowired;
 //github.com/initial-poc/pnr-resequencer-service.git
 import org.springframework.stereotype.Component;
@@ -32,6 +34,7 @@ public class PNRMessageGroupStore {
 		PNREntity pnrEntity = pnrModel.buildEntity();
 		pnrEntity.setStatus(RecordStatus.IN_PROGRESS.getStatusCode());
 		pnrEntity.setInstance(ip);
+		pnrEntity.setUpdated(Timestamp.now());
 		log.info("saving message {}", pnrEntity);
 		groupMessageStoreRepository.save(pnrEntity);
 		return pnrEntity;
@@ -41,6 +44,7 @@ public class PNRMessageGroupStore {
 		log.info("Going to update the status in table as  {} for record ->{} ", status,entity);
 			entity.setStatus(status);
 			entity.setInstance(ip);
+			entity.setUpdated(Timestamp.now());
 			groupMessageStoreRepository.getSpannerTemplate().update(entity);
 		 
 	}
