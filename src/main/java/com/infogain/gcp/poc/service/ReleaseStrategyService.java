@@ -1,6 +1,5 @@
 package com.infogain.gcp.poc.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,93 +21,52 @@ import reactor.core.publisher.Flux;
 @RequiredArgsConstructor
 public class ReleaseStrategyService {
 
-    private final GroupMessageStoreRepository msgGrpStoreRepository;
+	private final GroupMessageStoreRepository msgGrpStoreRepository;
 
-    @SuppressWarnings("all")
-    public ConnectableFlux<Object> release(PNREntity pnrEntity) {
+	@SuppressWarnings("all")
+	public ConnectableFlux<Object> release(PNREntity pnrEntity) {
 
-        ConnectableFlux<Object> flux = Flux.create(fluxSink->{
-        log.info("Getting all the messages from the table by pnr id");
-        Optional<List<PNREntity>> pnrEntityList = msgGrpStoreRepository.findByPnrid(pnrEntity.getPnrid());
+		return doRelease(pnrEntity);
 
-        List<PNREntity> pnrList = pnrEntityList.get();
-        log.info("Messages are {}", pnrList);
+	}
 
-        Map<Integer, Boolean> seqReleasedStatusMap = pnrList.stream()
-                .collect(Collectors.toMap(PNREntity::getMessageseq, x -> x.getStatus().equals(RecordStatus.RELEASED.getStatusCode()) ? true : false));
-        Map<Integer, PNREntity> seqPNREntityMap = pnrList.stream()
-                .collect(Collectors.toMap(PNREntity::getMessageseq, x -> x));
+	private ConnectableFlux<Object> doRelease(PNREntity pnrEntity) {
 
-        if (Optional.ofNullable(seqReleasedStatusMap.get(1)).isPresent()) {
-            seqReleasedStatusMap.put(1, true);
-            if (!seqPNREntityMap.get(1).getStatus().equals(RecordStatus.RELEASED.getStatusCode())) {
-                fluxSink.next(seqPNREntityMap.get(1));
-            }
-        }
+		Flux<PNREntity> pnrEntityList = msgGrpStoreRepository.findByPnrid(pnrEntity.getPnrid());
+		List<PNREntity> pnrList = pnrEntityList.toStream().collect(Collectors.toList());
 
-        log.info("seqReleasedStatusMap {}", seqReleasedStatusMap);
-        log.info("seqPNREntityMap {}", seqPNREntityMap);
+		ConnectableFlux<Object> flux = Flux.create(fluxSink -> {
+			log.info("Getting all the messages from the table by pnr id");
 
-        pnrList.stream().sorted().
-                filter(x -> Optional.ofNullable(seqReleasedStatusMap.get((x.getMessageseq()-1))).isPresent()).
-                filter(x-> seqReleasedStatusMap.get(x.getMessageseq()-1)).
-                filter(x -> !seqPNREntityMap.get(x.getMessageseq()).getStatus().equals(RecordStatus.RELEASED.getStatusCode()))
-                .forEach(x -> {
-                    seqReleasedStatusMap.put(x.getMessageseq(), true);
-                    fluxSink.next(x);
-                });
+			log.info("Messages are {}", pnrList);
 
-        }).publish();
-        return flux;
-    }
+			Map<Integer, Boolean> seqReleasedStatusMap = pnrList.stream()
+					.collect(Collectors.toMap(PNREntity::getMessageseq,
+							x -> x.getStatus().equals(RecordStatus.RELEASED.getStatusCode()) ? true : false));
+			Map<Integer, PNREntity> seqPNREntityMap = pnrList.stream()
+					.collect(Collectors.toMap(PNREntity::getMessageseq, x -> x));
 
-    public static ConnectableFlux<Object> releaseTest(List<PNREntity> pnrList) {
+			if (Optional.ofNullable(seqReleasedStatusMap.get(1)).isPresent()) {
+				seqReleasedStatusMap.put(1, true);
+				if (!seqPNREntityMap.get(1).getStatus().equals(RecordStatus.RELEASED.getStatusCode())) {
+					fluxSink.next(seqPNREntityMap.get(1));
+				}
+			}
 
-        ConnectableFlux<Object> flux = Flux.create(fluxSink->{
-        log.info("Getting all the messages from the table by pnr id");
-        //	pnrList.add(pnrEntity);
-        log.info("Messages are {}", pnrList);
-//        List<PNREntity> returnList = new ArrayList<PNREntity>();
+			log.info("seqReleasedStatusMap {}", seqReleasedStatusMap);
+			log.info("seqPNREntityMap {}", seqPNREntityMap);
 
-        Map<Integer, Boolean> seqReleasedStatusMap = pnrList.stream()
-                .collect(Collectors.toMap(PNREntity::getMessageseq, x -> x.getStatus().equals(RecordStatus.RELEASED.getStatusCode()) ? true : false));
-        Map<Integer, PNREntity> seqPNREntityMap = pnrList.stream()
-                .collect(Collectors.toMap(PNREntity::getMessageseq, x -> x));
+			pnrList.stream().sorted()
+					.filter(x -> Optional.ofNullable(seqReleasedStatusMap.get((x.getMessageseq() - 1))).isPresent())
+					.filter(x -> seqReleasedStatusMap.get(x.getMessageseq() - 1)).filter(x -> !seqPNREntityMap
+							.get(x.getMessageseq()).getStatus().equals(RecordStatus.RELEASED.getStatusCode()))
+					.forEach(x -> {
+						seqReleasedStatusMap.put(x.getMessageseq(), true);
+						fluxSink.next(x);
+					});
 
-        if (Optional.ofNullable(seqReleasedStatusMap.get(1)).isPresent()) {
-            seqReleasedStatusMap.put(1, true);
-            if (!seqPNREntityMap.get(1).getStatus().equals(RecordStatus.RELEASED.getStatusCode())) {
-                fluxSink.next(seqPNREntityMap.get(1));
-            }
-        }
-
-        log.info("seqReleasedStatusMap {}", seqReleasedStatusMap);
-        log.info("seqPNREntityMap {}", seqPNREntityMap);
-
-        pnrList.stream().sorted().
-                filter(x -> Optional.ofNullable(seqReleasedStatusMap.get((x.getMessageseq()-1))).isPresent()).
-                filter(x-> seqReleasedStatusMap.get(x.getMessageseq()-1)).
-                filter(x -> !seqPNREntityMap.get(x.getMessageseq()).getStatus().equals(RecordStatus.RELEASED.getStatusCode()))
-                .forEach(x -> {
-                    seqReleasedStatusMap.put(x.getMessageseq(), true);
-                    fluxSink.next(x);
-                });
-
-        }).publish();
-        return flux;
-    }
-
-    public static void main(String[] args) {
-        List<PNREntity> returnList = new ArrayList<PNREntity>();
-        returnList.add(PNREntity.builder().pnrid("PNR123").messageseq(1).status(RecordStatus.RELEASED.getStatusCode()).build());
-        returnList.add(PNREntity.builder().pnrid("PNR123").messageseq(2).status(RecordStatus.IN_PROGRESS.getStatusCode()).build());
-		returnList.add(PNREntity.builder().pnrid("PNR123").messageseq(3).status(RecordStatus.RELEASED.getStatusCode()).build());
-		returnList.add(PNREntity.builder().pnrid("PNR123").messageseq(4).status(RecordStatus.IN_PROGRESS.getStatusCode()).build());
-        ConnectableFlux<Object> flux = releaseTest(returnList);
-        flux.subscribe(x-> {
-            System.out.println((PNREntity)x);
-        });
-        flux.connect();
-    }
+		}).publish();
+		return flux;
+	}
 
 }

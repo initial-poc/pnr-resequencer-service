@@ -1,7 +1,5 @@
 package com.infogain.gcp.poc.service;
 
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 
 import com.infogain.gcp.poc.component.MessagePublisher;
@@ -13,6 +11,7 @@ import com.infogain.gcp.poc.util.RecordStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.ConnectableFlux;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -24,10 +23,14 @@ public class PNRSequencingService {
 
     private final ReleaseStrategyService releaseStrategyService;
 
-    public String processPNR(PNRModel pnrModel) {
+    public Mono<String> processPNR(PNRModel pnrModel) {
+        Mono<PNREntity> pnrEntity = messageGroupStore.getMessageById(pnrModel);
+        pnrEntity.subscribe(entity->doProcess(pnrModel, entity));
+        return Mono.just("success");
+    }
 
-        PNREntity pnrEntity = messageGroupStore.getMessageById(pnrModel);
-        if (pnrEntity == null || pnrEntity.getStatus().equals(RecordStatus.FAILED.getStatusCode())) {
+	private void doProcess(PNRModel pnrModel, PNREntity pnrEntity) {
+		if (pnrEntity == null || pnrEntity.getStatus().equals(RecordStatus.FAILED.getStatusCode())) {
             pnrEntity = messageGroupStore.addMessage(pnrModel);
 
             ConnectableFlux<Object> flux = releaseStrategyService.release(pnrEntity);
@@ -35,15 +38,12 @@ public class PNRSequencingService {
                 publishMessage((PNREntity) entity);
             });
             flux.connect();
-            // this below commented line can only happen once release strategy has finished work...
-            // so we can't have it here below.
-            //pnrEntity.setStatus(RecordStatus.RELEASED.getStatusCode());
+            
         } else {
             log.info("record is already in db and its status is {}", pnrEntity.getStatus());
         }
         log.info("process completed");
-        return RecordStatus.getStatusMessage(pnrEntity.getStatus()).toString();
-    }
+	}
 
     private void publishMessage(PNREntity entity) {
         messageGroupStore.updateStatus((PNREntity) entity, RecordStatus.RELEASED.getStatusCode());

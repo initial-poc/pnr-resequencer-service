@@ -2,11 +2,11 @@ package com.infogain.gcp.poc.component;
 
 import java.net.InetAddress;
 
-import com.google.cloud.Timestamp;
 import org.springframework.beans.factory.annotation.Autowired;
 //github.com/initial-poc/pnr-resequencer-service.git
 import org.springframework.stereotype.Component;
 
+import com.google.cloud.Timestamp;
 import com.infogain.gcp.poc.domainmodel.PNRModel;
 import com.infogain.gcp.poc.entity.PNREntity;
 import com.infogain.gcp.poc.poller.repository.GroupMessageStoreRepository;
@@ -14,6 +14,7 @@ import com.infogain.gcp.poc.util.RecordStatus;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 @Component
 @Slf4j
@@ -44,11 +45,13 @@ public class PNRMessageGroupStore {
 			entity.setStatus(status);
 			entity.setInstance(ip);
 			entity.setUpdated(Timestamp.now());
-			groupMessageStoreRepository.getSpannerTemplate().update(entity);
+			
+			groupMessageStoreRepository.save(entity);
+		//	groupMessageStoreRepository.getSpannerTemplate().update(entity);
 	}
 
-	public PNREntity getMessageById(PNRModel pnrModel) {
-		PNREntity entity=null;
+	public Mono<PNREntity> getMessageById(PNRModel pnrModel) {
+		Mono<PNREntity> entity=null;
 		entity=groupMessageStoreRepository.findByPnridAndMessageseq(pnrModel.getPnrid(),String.valueOf(pnrModel.getMessageseq()));
 		log.info("record in DB {}",entity);
 		return entity;

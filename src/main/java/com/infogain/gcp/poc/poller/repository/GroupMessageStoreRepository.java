@@ -1,16 +1,15 @@
 package com.infogain.gcp.poc.poller.repository;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.cloud.gcp.data.spanner.repository.SpannerRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
 import com.infogain.gcp.poc.entity.PNREntity;
 
-public interface GroupMessageStoreRepository extends SpannerRepository<PNREntity	, String>{
-	
-	Optional<List<PNREntity>> findByPnrid(String pnrid);
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-	PNREntity findByPnridAndMessageseq(String pnrid,String messageseq);
+public interface GroupMessageStoreRepository extends ReactiveCrudRepository<PNREntity	, String>{
+	Flux<PNREntity> findByPnrid(String pnrid);
+
+	Mono<PNREntity> findByPnridAndMessageseq(String pnrid,String messageseq);
 
 }
