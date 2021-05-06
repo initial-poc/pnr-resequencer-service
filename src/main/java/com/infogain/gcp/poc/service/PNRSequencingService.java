@@ -27,7 +27,7 @@ public class PNRSequencingService {
     public String processPNR(PNRModel pnrModel) {
 
         PNREntity pnrEntity = messageGroupStore.getMessageById(pnrModel);
-        if (pnrEntity == null || pnrEntity.getStatus().equals(RecordStatus.FAILED.getStatusCode())) {
+        if (shouldProcess(pnrEntity)) {
             pnrEntity = messageGroupStore.addMessage(pnrModel);
             List<PNREntity> toReleaseMessage = releaseStrategyService.release(pnrEntity);
             publishMessage(toReleaseMessage);
@@ -47,6 +47,11 @@ public class PNRSequencingService {
 
         log.info("process completed");
         return RecordStatus.getStatusMessage(pnrEntity.getStatus()).toString();
+    }
+
+    private boolean shouldProcess(PNREntity pnrEntity) {
+        return pnrEntity == null || pnrEntity.getStatus().equals(RecordStatus.FAILED.getStatusCode())
+                || pnrEntity.getStatus().equals(RecordStatus.CREATED.getStatusCode());
     }
 
     private void publishMessage(List<PNREntity> toReleaseMessage) {

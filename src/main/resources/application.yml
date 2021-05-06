@@ -1,7 +1,7 @@
 server.port: 9000
 
 spring:
- profiles.active: dev
+ profiles.active: emulator
  cloud:
    gcp:
      project-id: pnr-order-poc
@@ -41,3 +41,24 @@ spring.profiles: test
 
 ---
 spring.profiles: prod
+
+---
+spring.profiles: emulator
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 20
+  cloud:
+    gcp:
+      project-id: pnr-order-poc
+      spanner:
+        emulator:
+          enabled: true
+        emulator-host: localhost:9010
+        instance-id: instance-1
+        database: database-1
+      pubsub:
+        emulator-host: localhost:8085
