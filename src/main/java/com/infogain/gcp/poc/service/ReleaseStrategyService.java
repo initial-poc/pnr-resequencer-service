@@ -38,7 +38,8 @@ public class ReleaseStrategyService {
 
         if (Optional.ofNullable(seqReleasedStatusMap.get(1)).isPresent()) {
             seqReleasedStatusMap.put(1, true);
-            if (!seqPNREntityMap.get(1).getStatus().equals(RecordStatus.RELEASED.getStatusCode())) {
+            if (!(seqPNREntityMap.get(1).getStatus().equals(RecordStatus.COMPLETED.getStatusCode()) ||
+                    seqPNREntityMap.get(1).getStatus().equals(RecordStatus.RELEASED.getStatusCode()))) {
                 returnList.add(seqPNREntityMap.get(1));
             }
         }
@@ -47,12 +48,14 @@ public class ReleaseStrategyService {
         log.info("seqPNREntityMap {}", seqPNREntityMap);
 
         pnrList.stream().sorted().
-                filter(x -> Optional.ofNullable(seqReleasedStatusMap.get((x.getMessageseq()-1))).isPresent()).
-                filter(x-> seqReleasedStatusMap.get(x.getMessageseq()-1)).
-                filter(x -> !seqPNREntityMap.get(x.getMessageseq()).getStatus().equals(RecordStatus.RELEASED.getStatusCode()))
+                filter(x -> Optional.ofNullable(seqReleasedStatusMap.get((x.getMessageseq() - 1))).isPresent()).
+                filter(x -> seqReleasedStatusMap.get(x.getMessageseq() - 1))
+                //filter(x -> !seqPNREntityMap.get(x.getMessageseq()).getStatus().equals(RecordStatus.RELEASED.getStatusCode()))
                 .forEach(x -> {
                     seqReleasedStatusMap.put(x.getMessageseq(), true);
-                    returnList.add(x);
+                    if (!(x.getStatus().equals(RecordStatus.RELEASED.getStatusCode()) || x.getStatus().equals(RecordStatus.COMPLETED.getStatusCode()))) {
+                        returnList.add(x);
+                    }
                 });
 
         log.info("returning the list {}", returnList);
@@ -81,8 +84,8 @@ public class ReleaseStrategyService {
         log.info("seqPNREntityMap {}", seqPNREntityMap);
 
         pnrList.stream().sorted().
-                filter(x -> Optional.ofNullable(seqReleasedStatusMap.get((x.getMessageseq()-1))).isPresent()).
-                filter(x-> seqReleasedStatusMap.get(x.getMessageseq()-1)).
+                filter(x -> Optional.ofNullable(seqReleasedStatusMap.get((x.getMessageseq() - 1))).isPresent()).
+                filter(x -> seqReleasedStatusMap.get(x.getMessageseq() - 1)).
                 filter(x -> !seqPNREntityMap.get(x.getMessageseq()).getStatus().equals(RecordStatus.RELEASED.getStatusCode()))
                 .forEach(x -> {
                     seqReleasedStatusMap.put(x.getMessageseq(), true);
@@ -99,7 +102,7 @@ public class ReleaseStrategyService {
         returnList.add(PNREntity.builder().pnrid("PNR123").messageseq(3).status(RecordStatus.IN_PROGRESS.getStatusCode()).build());
 //		returnList.add(PNREntity.builder().pnrid("PNR123").messageseq(1).status(RecordStatus.RELEASED.getStatusCode()).build());
 //		returnList.add(PNREntity.builder().pnrid("PNR123").messageseq(2).status(RecordStatus.IN_PROGRESS.getStatusCode()).build());
-		/*returnList.add(PNREntity.builder().pnrid("PNR123").messageseq(9).status(RecordStatus.IN_PROGRESS.getStatusCode()).build());*/
+        /*returnList.add(PNREntity.builder().pnrid("PNR123").messageseq(9).status(RecordStatus.IN_PROGRESS.getStatusCode()).build());*/
         releaseTest(returnList).stream().forEach(System.out::println);
         returnList = new ArrayList<PNREntity>();
 
