@@ -42,7 +42,9 @@ public class PNRSequencingService {
                 pnrEntity.setStatus(RecordStatus.RELEASED.getStatusCode());
             }
         } else {
-            log.info("record is already in db and its status is {}", pnrEntity.getStatus());
+            log.info("***** Duplicate Record Start ******* ");
+            log.info("***** Pnr Id ******: {}", pnrEntity.getPnrid());
+            log.info("***** Duplicate Record End ******* ");
         }
 
         log.info("process completed");
