@@ -29,18 +29,17 @@ public class PNRSequencingService {
         PNREntity pnrEntity = messageGroupStore.getMessageById(pnrModel);
         if (shouldProcess(pnrEntity)) {
             pnrEntity = messageGroupStore.addMessage(pnrModel);
+            if(isMarkRecordToFailure(pnrEntity)) {
+            	 pnrEntity.setStatus(RecordStatus.FAILED.getStatusCode());
+            	 pnrEntity.setRetry_count(pnrEntity.getRetry_count()+1);
+            	  messageGroupStore.updateStatus(pnrEntity, RecordStatus.FAILED.getStatusCode());
+                 throw new IllegalStateException("Failed ERR record..." + pnrEntity.getPnrid());
+            }
+            
             List<PNREntity> toReleaseMessage = releaseStrategyService.release(pnrEntity);
             publishMessage(toReleaseMessage);
-            if(pnrEntity.getPnrid().startsWith("STK")) {
-                log.info("received STK record {}", pnrEntity.getPnrid());
-                pnrEntity.setStatus(RecordStatus.IN_PROGRESS.getStatusCode());
-            } else if(pnrEntity.getPnrid().startsWith("ERR")) {
-                log.info("received ERR record {}", pnrEntity.getPnrid());
-                pnrEntity.setStatus(RecordStatus.FAILED.getStatusCode());
-                throw new IllegalStateException("Failed ERR record..." + pnrEntity.getPnrid());
-            } else {
+               
                 pnrEntity.setStatus(RecordStatus.RELEASED.getStatusCode());
-            }
         } else {
             log.info("***** Duplicate Record Start ******* ");
             log.info("***** Pnr Id ******: {}", pnrEntity.getPnrid());
@@ -66,6 +65,17 @@ public class PNRSequencingService {
 
         });
 
+    }
+    
+    
+    private boolean isMarkRecordToFailure(PNREntity entity) {
+    	boolean result=false;
+    	
+    	if(entity.getPnrid().equalsIgnoreCase("ERR001") && entity.getMessageseq().equals(1) && entity.getRetry_count()<3) {
+    		result=true;
+    	}
+    	
+    	return result;
     }
 
 }
