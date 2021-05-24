@@ -47,6 +47,10 @@ public class PNREntity implements Comparable<PNREntity>{
 
     private Timestamp updated;
 
+    private String parentPnr;
+
+    private String destination;
+
     @SneakyThrows
     public PNRModel buildModel() {
         PNRModel pnrModel = new PNRModel();

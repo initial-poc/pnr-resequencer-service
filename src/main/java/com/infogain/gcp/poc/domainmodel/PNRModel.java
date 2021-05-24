@@ -17,8 +17,9 @@ public class PNRModel {
 	private Integer messageseq;
 	private String payload;
 	private String timestamp;
-	
-	
+	private String destination;
+	private String parentPnr;
+
 	 @SneakyThrows
 	    public PNREntity buildEntity(){
 	        PNREntity pnrEntity = new PNREntity();
@@ -26,6 +27,8 @@ public class PNRModel {
 	        pnrEntity.setMessageseq(messageseq);
 	        pnrEntity.setPayload(payload);
 	        pnrEntity.setTimestamp(Timestamp.parseTimestamp(timestamp));
+	        pnrEntity.setDestination(destination);
+	        pnrEntity.setParentPnr(parentPnr);
 	        return pnrEntity;
 	    }
 

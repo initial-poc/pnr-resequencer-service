@@ -13,4 +13,6 @@ public interface GroupMessageStoreRepository extends SpannerRepository<PNREntity
 
 	PNREntity findByPnridAndMessageseq(String pnrid,String messageseq);
 
+	Optional<List<PNREntity>> findByParentPnrAndStatusNotIn(String pnrid,int status);
+
 }
