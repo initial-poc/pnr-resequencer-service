@@ -18,6 +18,7 @@ public class PNRModel {
 	private String payload;
 	private String timestamp;
 	private String destination;
+	private Integer retryCount;
 	private String parentPnr;
 
 	 @SneakyThrows

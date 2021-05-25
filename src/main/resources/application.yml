@@ -15,8 +15,9 @@ spring:
 ## logging
 logging:
   pattern.console: '%d{yyyy-MM-dd HH:mm:ss} [%X{source}] [%X{correlation-id}] [%-5level] [%C:%L] - %m%n'
-  file: logs/spanner-pollar-convereter-publisher/app.log
   level.org.springframework: info
+  file:
+    name: logs/spanner-pollar-converter-publisher/app.log
 
 # actuator properties
 management:

@@ -14,6 +14,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.ToString;
+import org.springframework.data.annotation.Id;
+
+import java.util.Objects;
 
 @Data
 @NoArgsConstructor
@@ -30,6 +33,10 @@ public class PNREntity implements Comparable<PNREntity>{
     @PrimaryKey(keyOrder = 2)
     @Column(name = "messageseq")
     private Integer messageseq;
+
+    @PrimaryKey(keyOrder = 3)
+    @Column(name = "destination")
+    private String destination;
 
     @Column(name = "status")
     private Integer status;
@@ -49,8 +56,6 @@ public class PNREntity implements Comparable<PNREntity>{
 
     private String parentPnr;
 
-    private String destination;
-
     @SneakyThrows
     public PNRModel buildModel() {
         PNRModel pnrModel = new PNRModel();
@@ -61,5 +66,18 @@ public class PNREntity implements Comparable<PNREntity>{
     @Override
     public int compareTo(PNREntity o) {
        return this.getMessageseq().compareTo(((PNREntity)o).getMessageseq());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PNREntity pnrEntity = (PNREntity) o;
+        return Objects.equals(pnrid, pnrEntity.pnrid) && Objects.equals(messageseq, pnrEntity.messageseq) && Objects.equals(destination, pnrEntity.destination);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pnrid, messageseq, destination);
     }
 }

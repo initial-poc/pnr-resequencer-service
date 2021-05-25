@@ -49,7 +49,8 @@ public class PNRMessageGroupStore {
 
 	public PNREntity getMessageById(PNRModel pnrModel) {
 		PNREntity entity=null;
-		entity=groupMessageStoreRepository.findByPnridAndMessageseq(pnrModel.getPnrid(),String.valueOf(pnrModel.getMessageseq()));
+		//entity=groupMessageStoreRepository.findByPnridAndMessageseq(pnrModel.getPnrid(),String.valueOf(pnrModel.getMessageseq()));
+		entity=groupMessageStoreRepository.findByPnridAndMessageseqAndDestination(pnrModel.getPnrid(),String.valueOf(pnrModel.getMessageseq()), pnrModel.getDestination());
 		log.info("record in DB {}",entity);
 		return entity;
 		

@@ -25,8 +25,19 @@ public class ReleaseStrategyService {
 
         Optional<List<PNREntity>> pnrEntityList = msgGrpStoreRepository.findByPnrid(pnrEntity.getPnrid());
 
+        log.info("list data : {}", pnrEntityList);
+
+        List<Integer> numList = new ArrayList<>();
+
+        //This indicates - childs are still getting processed
+        numList.add(0);
+        numList.add(1);
+        numList.add(2);
+        numList.add(4);
+
         Optional<List<PNREntity>> pnrEntityChildren =
-                msgGrpStoreRepository.findByParentPnrAndStatusNotIn(pnrEntity.getPnrid(),RecordStatus.RELEASED.getStatusCode());
+                msgGrpStoreRepository.findByParentPnrAndStatusInAndDestination(pnrEntity.getPnrid(), numList,pnrEntity.getDestination());
+                //msgGrpStoreRepository.findByParentPnrAndStatusIn(pnrEntity.getPnrid(),numList);
 
         Map<String,List<PNREntity>> returnMap = new HashMap<String,List<PNREntity>>();
         if(pnrEntityChildren.isPresent() && pnrEntityChildren.get().isEmpty()) {
@@ -34,6 +45,8 @@ public class ReleaseStrategyService {
 
         Map<String,List<PNREntity>> pnrMap =
                 pnrListComplete.stream().collect(Collectors.groupingBy(x->x.getDestination()));
+
+        log.info("pnrMap values : {}", pnrMap);
 
         pnrMap.keySet().stream().forEach( key-> {
             List <PNREntity> pnrList = pnrMap.get(key);
@@ -70,6 +83,7 @@ public class ReleaseStrategyService {
         log.info("returning the list {}", returnMap);
         return returnMap;
         } else {
+            //null will only be returned when current record is PARENT.
             return null;
         }
     }

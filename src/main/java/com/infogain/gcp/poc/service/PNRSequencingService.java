@@ -27,13 +27,20 @@ public class PNRSequencingService {
 
     public String processPNR(PNRModel pnrModel) {
 
+        log.info("Inside processPNR()");
+
         PNREntity pnrEntity = messageGroupStore.getMessageById(pnrModel);
         if (shouldProcess(pnrEntity)) {
             pnrEntity = messageGroupStore.addMessage(pnrModel);
             Map<String,List<PNREntity>> toReleaseMessage = releaseStrategyService.release(pnrEntity);
+            log.info("Data : {}", String.valueOf(toReleaseMessage));
+
             if(toReleaseMessage!=null) {
                 publishMessage(toReleaseMessage);
                 pnrEntity.setStatus(RecordStatus.RELEASED.getStatusCode());
+            } else {
+                messageGroupStore.updateStatus(pnrEntity, RecordStatus.CREATED.getStatusCode());
+                return "skipped";
             }
         } else {
             log.info("***** Duplicate Record Start ******* ");
