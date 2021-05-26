@@ -22,11 +22,6 @@ import reactor.netty.http.client.HttpClient;
 @Configuration
 public class AppConfig {
 
-	/*
-	@Value(value = "${serviceUrl}")
-	private String seriveUrl = "localhost:9000";
-	 */
-
 	@Bean
 	@ConditionalOnMissingBean
 	public PubSubTemplate pubSubTemplate(PubSubPublisherTemplate pubSubPublisherTemplate,
@@ -38,25 +33,5 @@ public class AppConfig {
 	public Gson gson(){
 		return new Gson();
 	}
-
-	/*
-	@Bean
-	public WebClient getWebClient() {
-		HttpClient httpClient = HttpClient.create()
-				.tcpConfiguration(client ->
-						client.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 100000)
-								.doOnConnected(conn -> conn
-										.addHandlerLast(new ReadTimeoutHandler(10000))
-										.addHandlerLast(new WriteTimeoutHandler(10000))));
-
-		ClientHttpConnector connector = new ReactorClientHttpConnector(httpClient.wiretap(true));
-
-		return WebClient.builder()
-				.baseUrl("http://" + seriveUrl)
-				.clientConnector(connector)
-				.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-				.build();
-	}
-	 */
 
 }

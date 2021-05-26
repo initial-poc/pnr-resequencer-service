@@ -25,6 +25,7 @@ public class APIGatewayService {
     private final SequencerOps sequencerOps;
 
     private static final String SEPARATOR = ":";
+    private static final String SKIPPED = "skipped";
 
     public void processRecord(OutboxEntity outboxEntity) {
         Stopwatch stopWatch = Stopwatch.createStarted();
@@ -73,7 +74,7 @@ public class APIGatewayService {
                     } else {
                         log.info("Got the response -> {}", res);
 
-                        if(res.equals("skipped")) {
+                        if(res.equals(SKIPPED)) {
 
                             log.info("This record has been skipped to marking this to 0 status again.");
                             postOperations(outboxEntity,stopWatch,RecordStatus.CREATED);
