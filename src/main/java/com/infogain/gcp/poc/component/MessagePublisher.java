@@ -1,5 +1,7 @@
 package com.infogain.gcp.poc.component;
 
+import com.google.protobuf.ByteString;
+import com.google.pubsub.v1.PubsubMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gcp.pubsub.core.PubSubTemplate;
 import org.springframework.stereotype.Component;
@@ -23,11 +25,19 @@ public class MessagePublisher {
 	
 	public void publishMessage(PNREntity entity) {
 
-		String message = convertMessage(entity);
-		pubSubTemplate.publish(topicName, message, Maps.newHashMap());
-		log.info("published message {} to topic {}", message, topicName);
+		log.info("Generating pubsub message.");
+		PubsubMessage pubsubMessage = createPubSubMessage(entity);
+
+		log.info("Publising message.");
+		pubSubTemplate.publish(topicName, pubsubMessage, Maps.newHashMap());
+		log.info("published message {} to topic {}", pubsubMessage, topicName);
 	}
 
+	private PubsubMessage createPubSubMessage(PNREntity entity) {
+		return PubsubMessage.newBuilder()
+				.setData(ByteString.copyFromUtf8(convertMessage(entity))).
+						setOrderingKey(entity.getPnrid()).build();
+	}
 	
 	private String convertMessage(PNREntity entity){
 		return  messageConverter.convert(entity);
