@@ -1,5 +1,6 @@
 package com.infogain.gcp.poc.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -66,7 +67,13 @@ public class PNRSequencingService {
         log.info("Going to update status for messages {}", toReleaseMessage);
         finalList.stream().forEach(entity -> {
             messageGroupStore.updateStatus(entity, RecordStatus.RELEASED.getStatusCode());
-            messagePublisher.publishMessage(entity);
+
+            //TODO: fix this with correct exception handling
+            try {
+                messagePublisher.publishMessage(entity);
+            } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
+            }
             messageGroupStore.updateStatus(entity, RecordStatus.COMPLETED.getStatusCode());
 
         });

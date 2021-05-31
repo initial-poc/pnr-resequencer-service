@@ -18,8 +18,8 @@ public class OutboxEntity {
     private String locator;
     @PrimaryKey(keyOrder = 2)
     private String version;
-    @Column(name = "parent_locator")
-    private String parentLocator;
+    //@Column(name = "parent_locator")
+    //private String parentLocator;
     private Timestamp created;
     private String data;
     private int status;
