@@ -4,8 +4,8 @@ spring:
  profiles.active: dev
  cloud:
    gcp:
-     project-id: pnr-order-poc
-     # credentials.location: file:C:\\Users\\ashu3\\AppData\\Roaming\\gcloud\\application_default_credentials.json
+     project-id: sab-ors-poc-sbx-01-9096
+      credentials.location: classpath:/cred.json
      spanner:
        instance-id: instance-1
        database: database-1
@@ -54,7 +54,7 @@ spring:
           batch_size: 20
   cloud:
     gcp:
-      project-id: pnr-order-poc
+      project-id: sab-ors-poc-sbx-01-9096
       spanner:
         emulator:
           enabled: true
