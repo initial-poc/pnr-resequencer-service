@@ -5,7 +5,7 @@ spring:
  cloud:
    gcp:
      project-id: sab-ors-poc-sbx-01-9096
-      credentials.location: classpath:/cred.json
+     #credentials.location:classpath/cred.json
      spanner:
        instance-id: instance-1
        database: database-1
