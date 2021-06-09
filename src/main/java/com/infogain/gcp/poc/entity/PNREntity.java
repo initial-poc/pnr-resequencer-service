@@ -59,7 +59,14 @@ public class PNREntity implements Comparable<PNREntity>{
     @SneakyThrows
     public PNRModel buildModel() {
         PNRModel pnrModel = new PNRModel();
-        BeanUtils.copyProperties(pnrModel, this);
+        pnrModel.setTimestamp(timestamp.toString());
+        pnrModel.setPayload(this.getPayload());
+        pnrModel.setDestination(this.getDestination());
+        pnrModel.setRetryCount(this.getRetry_count());
+        pnrModel.setPnrid(this.getPnrid());
+        pnrModel.setMessageseq(this.getMessageseq());
+        pnrModel.setParentPnr(this.getParentPnr());
+      //  BeanUtils.copyProperties(pnrModel, this);
         return pnrModel;
     }
 

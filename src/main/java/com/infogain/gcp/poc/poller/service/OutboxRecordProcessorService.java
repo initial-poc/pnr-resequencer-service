@@ -26,8 +26,8 @@ public class OutboxRecordProcessorService {
     private static int recordLimit = 10000;
 
     private static final String OUTBOX_SQL = "SELECT * FROM OUTBOX WHERE STATUS =0 order by updated desc LIMIT %s";
-    private static final String OUTBOX_FAILED_RECORD_SQL =
-            "SELECT * FROM OUTBOX WHERE STATUS =3 and retry_count<=3";
+    private static final String GRP_MSG_STORE_FAILED_SQL =
+            "SELECT * FROM group_message_store WHERE STATUS =4 and retry_count<=3";
     private static final String OUTBOX_STUCK_RECORD_SQL =
             "SELECT * FROM OUTBOX WHERE STATUS =1 and TIMESTAMP_DIFF(CURRENT_TIMESTAMP,updated, MINUTE)>5";
 
@@ -43,7 +43,11 @@ public class OutboxRecordProcessorService {
         doProcess(getRecord(OUTBOX_SQL));
     }
 
-    public void doProcess(List<OutboxEntity> recordToProcess) {
+    public void processFailedRecords() {
+        doProcess(getRecord(GRP_MSG_STORE_FAILED_SQL));
+    }
+
+    private void doProcess(List<OutboxEntity> recordToProcess) {
         log.info("total record -> {} to process by application->  {}", recordToProcess.size(), ip);
         log.info("RECORD {}", recordToProcess);
         process(recordToProcess);

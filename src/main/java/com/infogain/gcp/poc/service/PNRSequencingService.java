@@ -28,7 +28,7 @@ public class PNRSequencingService {
 
     public String processPNR(PNRModel pnrModel) {
 
-        log.info("Inside processPNR()");
+        log.info("Inside processPNR() {}",pnrModel);
 
         PNREntity pnrEntity = messageGroupStore.getMessageById(pnrModel);
         if (shouldProcess(pnrEntity)) {
