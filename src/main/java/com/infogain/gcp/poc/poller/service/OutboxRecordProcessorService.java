@@ -23,7 +23,7 @@ public class OutboxRecordProcessorService {
     private final String ip;
 
     //@Value(value = "${limit}")
-    private static int recordLimit = 10000;
+    private static int recordLimit = 500;
 
     private static final String OUTBOX_SQL = "SELECT * FROM OUTBOX WHERE STATUS =0 order by updated desc LIMIT %s";
     private static final String GRP_MSG_STORE_FAILED_SQL =
