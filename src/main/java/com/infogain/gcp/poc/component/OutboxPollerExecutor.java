@@ -19,7 +19,7 @@ public class OutboxPollerExecutor {
     @Autowired
     MessageGroupRecordProcessorService messageGroupRecordProcessorService;
 
-   @Scheduled(cron = "*/5 * * * * *")
+   @Scheduled(fixedDelay = 1000)
    // @Scheduled(cron = "0 */5 * ? * *")
     public void process() {
         log.info("poller started at {}", LocalTime.now());
