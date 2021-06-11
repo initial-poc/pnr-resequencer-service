@@ -14,6 +14,12 @@ import com.infogain.gcp.poc.service.PNRSequencingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/*
+This is now only for testing purpose
+As outbox internally does the method call to invoke resequencer-service
+we can remove this class later.
+ */
+
 @RestController
 @RequestMapping("api")
 @RequiredArgsConstructor

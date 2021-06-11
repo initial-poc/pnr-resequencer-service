@@ -1,6 +1,9 @@
 package com.infogain.gcp.poc.service;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -21,25 +24,24 @@ public class PNRSequencingService {
     private final PNRMessageGroupStore messageGroupStore;
     private final MessagePublisher messagePublisher;
 
-
     private final ReleaseStrategyService releaseStrategyService;
 
     public String processPNR(PNRModel pnrModel) {
 
+        log.info("Inside processPNR() {}",pnrModel);
+
         PNREntity pnrEntity = messageGroupStore.getMessageById(pnrModel);
         if (shouldProcess(pnrEntity)) {
             pnrEntity = messageGroupStore.addMessage(pnrModel);
-            List<PNREntity> toReleaseMessage = releaseStrategyService.release(pnrEntity);
-            publishMessage(toReleaseMessage);
-            if(pnrEntity.getPnrid().startsWith("STK")) {
-                log.info("received STK record {}", pnrEntity.getPnrid());
-                pnrEntity.setStatus(RecordStatus.IN_PROGRESS.getStatusCode());
-            } else if(pnrEntity.getPnrid().startsWith("ERR")) {
-                log.info("received ERR record {}", pnrEntity.getPnrid());
-                pnrEntity.setStatus(RecordStatus.FAILED.getStatusCode());
-                throw new IllegalStateException("Failed ERR record..." + pnrEntity.getPnrid());
-            } else {
+            Map<String,List<PNREntity>> toReleaseMessage = releaseStrategyService.release(pnrEntity);
+            log.info("Data : {}", String.valueOf(toReleaseMessage));
+
+            if(toReleaseMessage!=null) {
+                publishMessage(toReleaseMessage);
                 pnrEntity.setStatus(RecordStatus.RELEASED.getStatusCode());
+            } else {
+                messageGroupStore.updateStatus(pnrEntity, RecordStatus.CREATED.getStatusCode());
+                return "skipped";
             }
         } else {
             log.info("***** Duplicate Record Start ******* ");
@@ -56,13 +58,23 @@ public class PNRSequencingService {
                 || pnrEntity.getStatus().equals(RecordStatus.CREATED.getStatusCode());
     }
 
-    private void publishMessage(List<PNREntity> toReleaseMessage) {
+    private void publishMessage(Map<String,List<PNREntity>> toReleaseMessage) {
+
+        List<PNREntity> finalList =
+                toReleaseMessage.keySet().stream().map(entry -> toReleaseMessage.get(entry)).
+                        flatMap(list -> list.stream()).collect(Collectors.toList());
 
         log.info("Going to update status for messages {}", toReleaseMessage);
-        toReleaseMessage.stream().forEach(entity -> {
-            messageGroupStore.updateStatus(entity, RecordStatus.RELEASED.getStatusCode());
-            messagePublisher.publishMessage(entity);
+        finalList.stream().forEach(entity -> {
             messageGroupStore.updateStatus(entity, RecordStatus.COMPLETED.getStatusCode());
+
+            //TODO: fix this with correct exception handling
+            try {
+                messagePublisher.publishMessage(entity);
+            } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
+                messageGroupStore.updateStatus(entity, RecordStatus.FAILED.getStatusCode());
+            }
 
         });
 

@@ -1,11 +1,12 @@
 server.port: 9000
 
 spring:
- profiles.active: emulator
+ profiles.active: dev
  cloud:
    gcp:
-     project-id: pnr-order-poc
-     # credentials.location: file:C:\\Users\\ashu3\\AppData\\Roaming\\gcloud\\application_default_credentials.json
+     project-id: sab-ors-poc-sbx-01-9096
+     credentials:
+       location: classpath:cred.json
      spanner:
        instance-id: instance-1
        database: database-1
@@ -15,8 +16,9 @@ spring:
 ## logging
 logging:
   pattern.console: '%d{yyyy-MM-dd HH:mm:ss} [%X{source}] [%X{correlation-id}] [%-5level] [%C:%L] - %m%n'
-  file: logs/spanner-pollar-convereter-publisher/app.log
   level.org.springframework: info
+  file:
+    name: logs/spanner-pollar-converter-publisher/app.log
 
 # actuator properties
 management:
@@ -32,7 +34,7 @@ info:
     java-vendor: ${java.specification.vendor}
 
 app:
-  topic.name: topic-1
+  topic.name: projects/sab-ors-poc-sbx-01-9096/topics/topic-1
 ---
 spring.profiles: dev
 
@@ -53,7 +55,7 @@ spring:
           batch_size: 20
   cloud:
     gcp:
-      project-id: pnr-order-poc
+      project-id: sab-ors-poc-sbx-01-9096
       spanner:
         emulator:
           enabled: true

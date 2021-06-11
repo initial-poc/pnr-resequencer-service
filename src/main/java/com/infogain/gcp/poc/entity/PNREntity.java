@@ -14,6 +14,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.ToString;
+import org.springframework.data.annotation.Id;
+
+import java.util.Objects;
 
 @Data
 @NoArgsConstructor
@@ -31,6 +34,10 @@ public class PNREntity implements Comparable<PNREntity>{
     @Column(name = "messageseq")
     private Integer messageseq;
 
+    @PrimaryKey(keyOrder = 3)
+    @Column(name = "destination")
+    private String destination;
+
     @Column(name = "status")
     private Integer status;
 
@@ -47,15 +54,37 @@ public class PNREntity implements Comparable<PNREntity>{
 
     private Timestamp updated;
 
+    private String parentPnr;
+
     @SneakyThrows
     public PNRModel buildModel() {
         PNRModel pnrModel = new PNRModel();
-        BeanUtils.copyProperties(pnrModel, this);
+        pnrModel.setTimestamp(timestamp.toString());
+        pnrModel.setPayload(this.getPayload());
+        pnrModel.setDestination(this.getDestination());
+        pnrModel.setRetryCount(this.getRetry_count());
+        pnrModel.setPnrid(this.getPnrid());
+        pnrModel.setMessageseq(this.getMessageseq());
+        pnrModel.setParentPnr(this.getParentPnr());
+      //  BeanUtils.copyProperties(pnrModel, this);
         return pnrModel;
     }
 
     @Override
     public int compareTo(PNREntity o) {
        return this.getMessageseq().compareTo(((PNREntity)o).getMessageseq());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PNREntity pnrEntity = (PNREntity) o;
+        return Objects.equals(pnrid, pnrEntity.pnrid) && Objects.equals(messageseq, pnrEntity.messageseq) && Objects.equals(destination, pnrEntity.destination);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pnrid, messageseq, destination);
     }
 }

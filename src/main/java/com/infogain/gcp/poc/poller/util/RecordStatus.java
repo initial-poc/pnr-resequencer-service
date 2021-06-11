@@ -1,14 +1,13 @@
-package com.infogain.gcp.poc.util;
+package com.infogain.gcp.poc.poller.util;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public enum RecordStatus {
-	CREATED(0,"Record created"),
-	IN_PROGRESS(1, "Record is in progess"),
-	RELEASED(2, "Record is released"),
-	COMPLETED(3, "Record is completed"),
-	FAILED(4, "Record process is failed");
+	IN_PROGRESS(1, "Record is in progess"),   COMPLETED(2, "Record is completed"),
+	FAILED(3, "Record process is faild"),
+	CREATED(0, "Record is created")
+	;
 
 	private final int statusCode;
 	private final String statusMessage;
