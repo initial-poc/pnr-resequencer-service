@@ -15,6 +15,7 @@ import javax.print.attribute.standard.Destination;
 public interface GroupMessageStoreRepository extends SpannerRepository<PNREntity, String>{
 	
 	Optional<List<PNREntity>> findByPnrid(String pnrid);
+	Optional<List<PNREntity>> findByPnridAndDestination(String pnrid,String destination);
 
 	PNREntity findByPnridAndMessageseq(String pnrid,String messageseq);
 

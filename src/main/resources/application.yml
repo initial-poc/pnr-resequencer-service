@@ -34,7 +34,7 @@ info:
     java-vendor: ${java.specification.vendor}
 
 app:
-  topic.name: topic-1
+  topic.name: projects/sab-ors-poc-sbx-01-9096/topics/topic-1
 ---
 spring.profiles: dev
 

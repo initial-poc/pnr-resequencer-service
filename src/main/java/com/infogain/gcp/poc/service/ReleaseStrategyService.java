@@ -23,8 +23,8 @@ public class ReleaseStrategyService {
     public Map<String,List<PNREntity>> release(PNREntity pnrEntity) {
         log.info("Getting all the messages from the table by pnr id");
 
-        Optional<List<PNREntity>> pnrEntityList = msgGrpStoreRepository.findByPnrid(pnrEntity.getPnrid());
-
+       // Optional<List<PNREntity>> pnrEntityList = msgGrpStoreRepository.findByPnrid(pnrEntity.getPnrid());
+        Optional<List<PNREntity>> pnrEntityList = msgGrpStoreRepository.findByPnridAndDestination(pnrEntity.getPnrid(),pnrEntity.getDestination());
         log.info("list data : {}", pnrEntityList);
 
         List<Integer> numList = new ArrayList<>();

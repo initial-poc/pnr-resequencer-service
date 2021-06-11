@@ -66,15 +66,15 @@ public class PNRSequencingService {
 
         log.info("Going to update status for messages {}", toReleaseMessage);
         finalList.stream().forEach(entity -> {
-            messageGroupStore.updateStatus(entity, RecordStatus.RELEASED.getStatusCode());
+            messageGroupStore.updateStatus(entity, RecordStatus.COMPLETED.getStatusCode());
 
             //TODO: fix this with correct exception handling
             try {
                 messagePublisher.publishMessage(entity);
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
+                messageGroupStore.updateStatus(entity, RecordStatus.FAILED.getStatusCode());
             }
-            messageGroupStore.updateStatus(entity, RecordStatus.COMPLETED.getStatusCode());
 
         });
 
