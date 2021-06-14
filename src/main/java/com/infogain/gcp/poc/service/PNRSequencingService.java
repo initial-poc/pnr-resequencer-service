@@ -67,17 +67,17 @@ public class PNRSequencingService {
             for (PNREntity entity : l) {
                 long updatedRowCount = messageGroupStore.updateStatus(entity, RecordStatus.RELEASED.getStatusCode());
                 if(updatedRowCount==0){
-                    log.info("Got zero row count so returning");
+                    log.info("Already updated by other thread, so skipping process by this thread.");
                     return;
                 }
-                //  messageGroupStore.updateStatus(entity, RecordStatus.COMPLETED.getStatusCode());
                 try {
                     messagePublisher.publishMessage(entity);
+                    messageGroupStore.updateStatus(entity, RecordStatus.COMPLETED.getStatusCode());
                 } catch (InterruptedException | IOException e) {
                     e.printStackTrace();
                     messageGroupStore.updateStatus(entity, RecordStatus.FAILED.getStatusCode());
                 }
-                messageGroupStore.updateStatus(entity, RecordStatus.COMPLETED.getStatusCode());
+
             }
         }
     }

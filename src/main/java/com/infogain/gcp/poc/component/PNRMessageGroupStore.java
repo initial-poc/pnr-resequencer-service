@@ -51,7 +51,7 @@ public class PNRMessageGroupStore {
 		String sql =
 				"UPDATE group_message_store "
 						+ "SET status ="+status
-						+ " WHERE status = "+ (status-1) +" and pnrid= '"+entity.getPnrid() +"' and messageseq='"+entity.getMessageseq()+"'";
+						+ " WHERE status = "+ (status-1) +" and pnrid= '"+entity.getPnrid() +"' and messageseq='"+entity.getMessageseq()+"' and destination='" +entity.getDestination()+"'";
 		//	groupMessageStoreRepository.getSpannerTemplate().update(entity);
 		/*client.  readWriteTransaction()
 				.run(transaction -> {
