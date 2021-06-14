@@ -4,11 +4,9 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Statement;
 import com.google.common.base.Stopwatch;
 import com.infogain.gcp.poc.entity.PNREntity;
-import com.infogain.gcp.poc.poller.entity.GroupMessageStoreEntity;
 import com.infogain.gcp.poc.poller.repository.GroupMessageStoreRepository;
-import com.infogain.gcp.poc.poller.repository.SpannerGroupMessageStoreRepository;
-import com.infogain.gcp.poc.poller.sequencer.SequencerOps;
 import com.infogain.gcp.poc.poller.util.RecordStatus;
+import com.infogain.gcp.poc.service.PNRSequencingService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +22,7 @@ public class MessageGroupRecordProcessorService {
 
     private final GroupMessageStoreRepository groupMessageStoreRepository;
     private final String ip;
-   private SequencerOps sequencerOps;
+    private final PNRSequencingService pnrSequencingService;
 
     //@Value(value = "${limit}")
     private int recordLimit=10;
@@ -36,10 +34,10 @@ public class MessageGroupRecordProcessorService {
 
     @Autowired
     @SneakyThrows
-    public MessageGroupRecordProcessorService(GroupMessageStoreRepository groupMessageStoreRepository, SequencerOps sequencerOps) {
+    public MessageGroupRecordProcessorService(GroupMessageStoreRepository groupMessageStoreRepository,   PNRSequencingService pnrSequencingService) {
         this.groupMessageStoreRepository = groupMessageStoreRepository;
         ip = InetAddress.getLocalHost().getHostAddress();
-        this.sequencerOps=sequencerOps;
+        this.pnrSequencingService=pnrSequencingService;
     }
 
    public void processFailedRecords() {
@@ -55,16 +53,12 @@ public class MessageGroupRecordProcessorService {
         log.info("RECORD {}", recordToProcess);
         recordToProcess.stream().forEach(x->{
             updateRecord(x, RecordStatus.CREATED.getStatusCode());
-                    sequencerOps.callProcessPNR(x.buildModel());
+                    pnrSequencingService.processPNR(x.buildModel());
         }
         );
     }
 
-   /* public void doProcessStuckRecords(List<GroupMessageStoreEntity> recordToProcess) {
-        log.info("total record -> {} to process by application->  {}", recordToProcess.size(), ip);
-        log.info("RECORD {}", recordToProcess);
-        recordToProcess.stream().forEach(x->updateRecord(x, RecordStatus.FAILED.getStatusCode()));
-    }*/
+
 
     private List<PNREntity> getRecord(String sql) {
         log.info("Getting record to process by application->  {}", ip);

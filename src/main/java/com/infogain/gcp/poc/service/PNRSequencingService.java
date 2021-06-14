@@ -1,6 +1,7 @@
 package com.infogain.gcp.poc.service;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -60,24 +61,25 @@ public class PNRSequencingService {
 
     private void publishMessage(Map<String,List<PNREntity>> toReleaseMessage) {
 
-        List<PNREntity> finalList =
-                toReleaseMessage.keySet().stream().map(entry -> toReleaseMessage.get(entry)).
-                        flatMap(list -> list.stream()).collect(Collectors.toList());
+        Collection<List<PNREntity>> values = toReleaseMessage.values();
+        for (List<PNREntity> l: values) {
 
-        log.info("Going to update status for messages {}", toReleaseMessage);
-        finalList.stream().forEach(entity -> {
-            messageGroupStore.updateStatus(entity, RecordStatus.COMPLETED.getStatusCode());
-
-            //TODO: fix this with correct exception handling
-            try {
-                messagePublisher.publishMessage(entity);
-            } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
-                messageGroupStore.updateStatus(entity, RecordStatus.FAILED.getStatusCode());
+            for (PNREntity entity : l) {
+                long updatedRowCount = messageGroupStore.updateStatus(entity, RecordStatus.RELEASED.getStatusCode());
+                if(updatedRowCount==0){
+                    log.info("Got zero row count so returning");
+                    return;
+                }
+                //  messageGroupStore.updateStatus(entity, RecordStatus.COMPLETED.getStatusCode());
+                try {
+                    messagePublisher.publishMessage(entity);
+                } catch (InterruptedException | IOException e) {
+                    e.printStackTrace();
+                    messageGroupStore.updateStatus(entity, RecordStatus.FAILED.getStatusCode());
+                }
+                messageGroupStore.updateStatus(entity, RecordStatus.COMPLETED.getStatusCode());
             }
-
-        });
-
+        }
     }
 
 }

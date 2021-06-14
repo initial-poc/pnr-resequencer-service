@@ -27,7 +27,7 @@ public class OutboxPollerExecutor {
         log.info("poller completed at {}", LocalTime.now());
     }
 
-    @Scheduled(cron = "*/10 * * * * *")
+  //  @Scheduled(cron = "*/10 * * * * *")
     public void processFailedRecords() {
         log.info("Failed Record poller started at {}", LocalTime.now());
         messageGroupRecordProcessorService.processFailedRecords();
