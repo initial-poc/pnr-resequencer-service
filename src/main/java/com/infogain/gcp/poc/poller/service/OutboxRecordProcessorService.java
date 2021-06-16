@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gcp.data.spanner.core.SpannerOperations;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Objects;
@@ -30,8 +31,8 @@ public class OutboxRecordProcessorService {
 
     //@Value(value = "${limit}")
     private static int recordLimit = 500;
-    //@Value(value = "${thread.limit.outbox}")
-    //private int MAX_THREAD_LIMIT;
+    @Value(value = "${threads}")
+    private int MAX_THREAD_LIMIT;
 
     private static final String OUTBOX_SQL = "SELECT * FROM OUTBOX WHERE STATUS =0 order by updated desc LIMIT %s";
     private static final String GRP_MSG_STORE_FAILED_SQL =
@@ -45,18 +46,22 @@ public class OutboxRecordProcessorService {
         this.outboxStatusService = outboxStatusService;
         this.spannerOutboxRepository = spannerOutboxRepository;
         ip = InetAddress.getLocalHost().getHostAddress();
-        //executorServices = Executors.newFixedThreadPool(MAX_THREAD_LIMIT);
     }
 
+    @PostConstruct
+    public void initializeThread(){
+        executorServices = Executors.newFixedThreadPool(MAX_THREAD_LIMIT);
+    }
     public void processRecords() {
-        if(Objects.isNull(executorServices)) {
-            executorServices = Executors.newFixedThreadPool(3);
+        List<OutboxEntity> outboxEntities = getRecord(OUTBOX_SQL);
+        if(outboxEntities.isEmpty()){
+            log.info("=========   Record not found for processing =========");
+            return;
         }
-        List<OutboxEntity> getRecords = getRecord(OUTBOX_SQL);
-        List<List<OutboxEntity>> subListGetRecords = Lists.partition(getRecords, 3);
+        List<List<OutboxEntity>> records = Lists.partition(outboxEntities, MAX_THREAD_LIMIT);
 
         executorServices.submit(() -> {
-            subListGetRecords.stream().forEach(partitionedRecords -> doProcess(partitionedRecords));
+            records.stream().forEach(partitionedRecords -> doProcess(partitionedRecords));
         });
     }
 

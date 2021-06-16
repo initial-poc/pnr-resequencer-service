@@ -16,4 +16,4 @@ ARG jar_file=target/pnr-resequencer-service.jar
 COPY ${jar_file} pnr-resequencer-service.jar
 
 # run the jar file
-ENTRYPOINT ["java", "-jar", "pnr-resequencer-service.jar"]
+ENTRYPOINT ["java", "-jar", "pnr-resequencer-service.jar" ,"-Dthreads=3"]
