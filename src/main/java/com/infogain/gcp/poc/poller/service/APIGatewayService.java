@@ -29,9 +29,6 @@ public class APIGatewayService {
     public void processRecord(OutboxEntity outboxEntity) {
         Stopwatch stopWatch = Stopwatch.createStarted();
 
-
-        updateRecord(outboxEntity, RecordStatus.COMPLETED.getStatusCode());
-
         String[] playloadArray = PNRModelUtil.convert(outboxEntity.buildModel()).getPayload().split(SEPARATOR);
         log.info("total payloads received of size : {}", playloadArray.length);
 

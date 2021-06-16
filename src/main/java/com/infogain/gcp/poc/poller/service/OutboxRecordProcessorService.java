@@ -5,6 +5,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.infogain.gcp.poc.poller.entity.OutboxEntity;
 import com.infogain.gcp.poc.poller.repository.SpannerOutboxRepository;
+import com.infogain.gcp.poc.poller.util.RecordStatus;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class OutboxRecordProcessorService {
     private final String ip;
 
     //@Value(value = "${limit}")
-    private static int recordLimit = 500;
+    private static int recordLimit = 900;
     @Value(value = "${threads}")
     private int MAX_THREAD_LIMIT;
 
@@ -88,6 +89,15 @@ public class OutboxRecordProcessorService {
     }
 
     private void process(List<OutboxEntity> outboxEntities) {
+        updateStatus(outboxEntities);
         outboxEntities.stream().forEach(outboxStatusService::processRecord);
     }
+
+    private void updateStatus(List<OutboxEntity> outboxEntities){
+        outboxEntities.stream().forEach(outboxEntity -> outboxEntity.setStatus(RecordStatus.COMPLETED.getStatusCode()));
+        spannerOutboxRepository.saveAll(outboxEntities);
+    }
+
+
+
 }
