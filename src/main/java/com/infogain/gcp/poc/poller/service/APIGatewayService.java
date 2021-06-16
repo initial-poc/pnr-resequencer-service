@@ -25,15 +25,10 @@ public class APIGatewayService {
 
     private static final String SEPARATOR = ":";
 
-    @Async
     public void processRecord(OutboxEntity outboxEntity) {
         Stopwatch stopWatch = Stopwatch.createStarted();
 
         String[] playloadArray = PNRModelUtil.convert(outboxEntity.buildModel()).getPayload().split(SEPARATOR);
-        log.info("total payloads received of size : {}", playloadArray.length);
-
-
-        log.info("Processing all PNRs for outbox value : {} ", outboxEntity);
         for(String destination : playloadArray){
             doRelease( PNRModelUtil.convert(outboxEntity.buildModel(), destination));
 
@@ -43,19 +38,4 @@ public class APIGatewayService {
     private void doRelease(PNRModel pnrRecord) {
         pnrSequencingService.processPNR(pnrRecord);
     }
-
-
-    private void updateRecord(OutboxEntity entity, int status) {
-        if (status == RecordStatus.FAILED.getStatusCode()) {
-            entity.setRetry_count(entity.getRetry_count() + 1);
-        }
-        entity.setStatus(status);
-        entity.setUpdated(Timestamp.now());
-        log.info("Going to update status for the record {}", entity);
-        outboxRepository.save(entity);
-    }
-
-
-
-
 }

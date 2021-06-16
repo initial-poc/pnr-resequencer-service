@@ -21,12 +21,9 @@ public class ReleaseStrategyService {
 
     @SuppressWarnings("all")
     public Map<String,List<PNREntity>> release(PNREntity pnrEntity) {
-        log.info("Getting all the messages from the table by pnr id");
 
        // Optional<List<PNREntity>> pnrEntityList = msgGrpStoreRepository.findByPnrid(pnrEntity.getPnrid());
         Optional<List<PNREntity>> pnrEntityList = msgGrpStoreRepository.findByPnridAndDestination(pnrEntity.getPnrid(),pnrEntity.getDestination());
-        log.info("list data : {}", pnrEntityList);
-
         List<Integer> numList = new ArrayList<>();
 
         //This indicates - childs are still getting processed
@@ -46,12 +43,10 @@ public class ReleaseStrategyService {
         Map<String,List<PNREntity>> pnrMap =
                 pnrListComplete.stream().collect(Collectors.groupingBy(x->x.getDestination()));
 
-        log.info("pnrMap values : {}", pnrMap);
 
         pnrMap.keySet().stream().forEach( key-> {
             List <PNREntity> pnrList = pnrMap.get(key);
             List<PNREntity> returnList = new ArrayList<PNREntity>();
-            log.info("Messages are {}", pnrList);
             Map<Integer, Boolean> seqReleasedStatusMap = pnrList.stream()
                     .collect(Collectors.toMap(PNREntity::getMessageseq, x -> x.getStatus().equals(RecordStatus.RELEASED.getStatusCode()) ? true : false));
             Map<Integer, PNREntity> seqPNREntityMap = pnrList.stream()
@@ -65,8 +60,6 @@ public class ReleaseStrategyService {
                 }
             }
 
-            log.info("seqReleasedStatusMap {}", seqReleasedStatusMap);
-            log.info("seqPNREntityMap {}", seqPNREntityMap);
 
             pnrList.stream().sorted().
                     filter(x -> Optional.ofNullable(seqReleasedStatusMap.get((x.getMessageseq() - 1))).isPresent()).
@@ -80,7 +73,6 @@ public class ReleaseStrategyService {
                     });
             returnMap.put(key,returnList);
         });
-        log.info("returning the list {}", returnMap);
         return returnMap;
         } else {
             //null will only be returned when current record is PARENT.

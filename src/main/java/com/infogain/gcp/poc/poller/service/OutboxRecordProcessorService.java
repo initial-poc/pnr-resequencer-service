@@ -15,10 +15,14 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -59,21 +63,24 @@ public class OutboxRecordProcessorService {
             log.info("=========   Record not found for processing =========");
             return;
         }
-        List<List<OutboxEntity>> records = Lists.partition(outboxEntities, MAX_THREAD_LIMIT);
-
-        executorServices.submit(() -> {
-            records.stream().forEach(partitionedRecords -> doProcess(partitionedRecords));
-        });
+        List<List<OutboxEntity>> records = Lists.partition(outboxEntities, (outboxEntities.size()+1)/MAX_THREAD_LIMIT);
+        List<Future<String>> response = records.stream().map(entities -> executorServices.submit(() -> doProcess(entities))).collect(Collectors.toList());
+        try {
+            response.get(0).get();
+        }catch (Exception ex){
+            log.error("Exception occurred while getting response from thread",ex);
+        }
     }
 
     public void processFailedRecords() {
         doProcess(getRecord(GRP_MSG_STORE_FAILED_SQL));
     }
 
-    private void doProcess(List<OutboxEntity> recordToProcess) {
+    private String doProcess(List<OutboxEntity> recordToProcess) {
         log.info("total record -> {} to process by application->  {}", recordToProcess.size(), ip);
         log.info("RECORD {}", recordToProcess);
         process(recordToProcess);
+        return "success";
     }
 
     private List<OutboxEntity> getRecord(String sql) {
@@ -84,6 +91,7 @@ public class OutboxRecordProcessorService {
                 Statement.of(String.format(sql, recordLimit)), null);
         stopWatch.stop();
         log.info("Total time taken to fetch the records {}", stopWatch);
+        log.info("Total record fetched from db {}",recordToProcess.size());
         return recordToProcess;
 
     }

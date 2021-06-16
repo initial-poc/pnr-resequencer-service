@@ -29,8 +29,6 @@ public class PNRSequencingService {
 
     public String processPNR(PNRModel pnrModel) {
 
-        log.info("Inside processPNR() {}",pnrModel);
-
         PNREntity pnrEntity = messageGroupStore.getMessageById(pnrModel);
         if (shouldProcess(pnrEntity)) {
             pnrEntity = messageGroupStore.addMessage(pnrModel);
@@ -49,8 +47,6 @@ public class PNRSequencingService {
             log.info("***** Pnr Id ******: {}", pnrEntity.getPnrid());
             log.info("***** Duplicate Record End ******* ");
         }
-
-        log.info("process completed");
         return RecordStatus.getStatusMessage(pnrEntity.getStatus()).toString();
     }
 
