@@ -13,6 +13,7 @@ public class PublisherUtil {
 
     public static Publisher getPublisher(String topicName) throws IOException {
         return Publisher.newBuilder(topicName)
+                .setEndpoint("us-central1-pubsub.googleapis.com:443")
                 .setEnableMessageOrdering(true)
                 .build();
     }
