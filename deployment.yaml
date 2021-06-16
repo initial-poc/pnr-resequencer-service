@@ -15,4 +15,10 @@ spec:
       containers:
         - image: gcr.io/sab-ors-poc-sbx-01-9096/pnr-resequencer-service:latest
           name: pnr-resequencer-service
+          volumeMounts:
+          - name: google-cloud-key
+            mountPath: /var/secrets/google
+          env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /var/secrets/google/key.json
             
