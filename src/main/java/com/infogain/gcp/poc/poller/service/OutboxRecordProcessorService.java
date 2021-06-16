@@ -2,6 +2,7 @@ package com.infogain.gcp.poc.poller.service;
 
 import com.google.cloud.spanner.Statement;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 import com.infogain.gcp.poc.poller.entity.OutboxEntity;
 import com.infogain.gcp.poc.poller.repository.SpannerOutboxRepository;
 import lombok.SneakyThrows;
@@ -13,10 +14,15 @@ import org.springframework.stereotype.Service;
 
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 @Slf4j
 public class OutboxRecordProcessorService {
+
+    ExecutorService executorServices = null;
 
     private final APIGatewayService outboxStatusService;
     private final SpannerOutboxRepository spannerOutboxRepository;
@@ -24,6 +30,8 @@ public class OutboxRecordProcessorService {
 
     //@Value(value = "${limit}")
     private static int recordLimit = 500;
+    //@Value(value = "${thread.limit.outbox}")
+    //private int MAX_THREAD_LIMIT;
 
     private static final String OUTBOX_SQL = "SELECT * FROM OUTBOX WHERE STATUS =0 order by updated desc LIMIT %s";
     private static final String GRP_MSG_STORE_FAILED_SQL =
@@ -37,10 +45,19 @@ public class OutboxRecordProcessorService {
         this.outboxStatusService = outboxStatusService;
         this.spannerOutboxRepository = spannerOutboxRepository;
         ip = InetAddress.getLocalHost().getHostAddress();
+        //executorServices = Executors.newFixedThreadPool(MAX_THREAD_LIMIT);
     }
 
     public void processRecords() {
-        doProcess(getRecord(OUTBOX_SQL));
+        if(Objects.isNull(executorServices)) {
+            executorServices = Executors.newFixedThreadPool(3);
+        }
+        List<OutboxEntity> getRecords = getRecord(OUTBOX_SQL);
+        List<List<OutboxEntity>> subListGetRecords = Lists.partition(getRecords, 3);
+
+        executorServices.submit(() -> {
+            subListGetRecords.stream().forEach(partitionedRecords -> doProcess(partitionedRecords));
+        });
     }
 
     public void processFailedRecords() {
