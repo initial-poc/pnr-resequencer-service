@@ -12,6 +12,11 @@ spec:
       labels:
         app: pnr-resequencer-service-pod
     spec:
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: pubsub-key    
+    spec:
       containers:
         - image: gcr.io/sab-ors-poc-sbx-01-9096/pnr-resequencer-service:latest
           name: pnr-resequencer-service
