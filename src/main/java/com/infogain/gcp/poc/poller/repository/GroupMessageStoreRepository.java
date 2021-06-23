@@ -3,14 +3,9 @@ package com.infogain.gcp.poc.poller.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.infogain.gcp.poc.util.RecordStatus;
 import org.springframework.cloud.gcp.data.spanner.repository.SpannerRepository;
 
 import com.infogain.gcp.poc.entity.PNREntity;
-import org.springframework.cloud.gcp.data.spanner.repository.query.Query;
-import org.springframework.data.repository.query.Param;
-
-import javax.print.attribute.standard.Destination;
 
 public interface GroupMessageStoreRepository extends SpannerRepository<PNREntity, String>{
 	

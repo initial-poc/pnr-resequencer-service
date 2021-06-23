@@ -1,11 +1,11 @@
 package com.infogain.gcp.poc.poller.entity;
 
 import com.google.cloud.Timestamp;
-import com.infogain.gcp.poc.poller.domainmodel.PNRModel;
+import com.infogain.gcp.poc.domainmodel.PNRModel;
 import lombok.*;
-import org.springframework.cloud.gcp.data.spanner.core.mapping.Column;
 import org.springframework.cloud.gcp.data.spanner.core.mapping.PrimaryKey;
 import org.springframework.cloud.gcp.data.spanner.core.mapping.Table;
+
 
 @Data
 @Builder
@@ -18,8 +18,6 @@ public class OutboxEntity {
     private String locator;
     @PrimaryKey(keyOrder = 2)
     private String version;
-    //@Column(name = "parent_locator")
-    //private String parentLocator;
     private Timestamp created;
     private String data;
     private int status;
@@ -35,10 +33,17 @@ public class OutboxEntity {
         pnrModel.setPayload(this.getData());
         pnrModel.setPnrid(this.getLocator());
         pnrModel.setTimestamp(this.getCreated()==null?Timestamp.now().toString():this.getCreated().toString());
-        pnrModel.setRetry_count(this.retry_count);
-        pnrModel.setUpdated(this.updated);
         pnrModel.setParentPnr(this.parentPnr);
         return pnrModel;
     }
-
+    public PNRModel buildModel(String destination) {
+        PNRModel pnrModel = new PNRModel();
+        pnrModel.setMessageseq(this.getVersion());
+        pnrModel.setPayload(this.getData());
+        pnrModel.setPnrid(this.getLocator());
+        pnrModel.setTimestamp(this.getCreated()==null?Timestamp.now().toString():this.getCreated().toString());
+        pnrModel.setParentPnr(this.parentPnr);
+        pnrModel.setDestination(destination);
+        return pnrModel;
+    }
 }

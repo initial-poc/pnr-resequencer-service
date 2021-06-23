@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.infogain.gcp.poc.entity.PNREntity;
 import com.infogain.gcp.poc.poller.repository.GroupMessageStoreRepository;
-import com.infogain.gcp.poc.util.RecordStatus;
+import com.infogain.gcp.poc.util.GroupMessageRecordStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,43 +19,39 @@ public class ReleaseStrategyService {
 
     private final GroupMessageStoreRepository msgGrpStoreRepository;
 
-    @SuppressWarnings("all")
-    public Map<String,List<PNREntity>> release(PNREntity pnrEntity) {
+    public List<PNREntity> release(PNREntity pnrEntity) {
 
-       // Optional<List<PNREntity>> pnrEntityList = msgGrpStoreRepository.findByPnrid(pnrEntity.getPnrid());
-        Optional<List<PNREntity>> pnrEntityList = msgGrpStoreRepository.findByPnridAndDestination(pnrEntity.getPnrid(),pnrEntity.getDestination());
-        List<Integer> numList = new ArrayList<>();
+       Optional<List<PNREntity>> pnrEntityList = msgGrpStoreRepository.findByPnrid(pnrEntity.getPnrid());
+    //    Optional<List<PNREntity>> pnrEntityList = msgGrpStoreRepository.findByPnridAndDestination(pnrEntity.getPnrid(),pnrEntity.getDestination());
+        List<Integer> status = new ArrayList<>();
 
         //This indicates - childs are still getting processed
-        numList.add(0);
-        numList.add(1);
-        numList.add(2);
-        numList.add(4);
+        status.add(0);
+        status.add(1);
+        status.add(2);
+        status.add(4);
 
         Optional<List<PNREntity>> pnrEntityChildren =
-                msgGrpStoreRepository.findByParentPnrAndStatusInAndDestination(pnrEntity.getPnrid(), numList,pnrEntity.getDestination());
-                //msgGrpStoreRepository.findByParentPnrAndStatusIn(pnrEntity.getPnrid(),numList);
+               // msgGrpStoreRepository.findByParentPnrAndStatusInAndDestination(pnrEntity.getPnrid(), numList,pnrEntity.getDestination());
+                msgGrpStoreRepository.findByParentPnrAndStatusIn(pnrEntity.getPnrid(),status);
 
         Map<String,List<PNREntity>> returnMap = new HashMap<String,List<PNREntity>>();
         if(pnrEntityChildren.isPresent() && pnrEntityChildren.get().isEmpty()) {
-        List<PNREntity> pnrListComplete = pnrEntityList.get();
-
-        Map<String,List<PNREntity>> pnrMap =
-                pnrListComplete.stream().collect(Collectors.groupingBy(x->x.getDestination()));
-
-
-        pnrMap.keySet().stream().forEach( key-> {
-            List <PNREntity> pnrList = pnrMap.get(key);
+            List <PNREntity> pnrList = pnrEntityList.get();
             List<PNREntity> returnList = new ArrayList<PNREntity>();
+
+          //  pnrList.stream().collect(Collectors.toMap(pnrEntity1 -> pnrEntity1.getMessageseq(),o -> o,(pnrEntity1, pnrEntity2) -> pnrEntity1));
+
+
             Map<Integer, Boolean> seqReleasedStatusMap = pnrList.stream()
-                    .collect(Collectors.toMap(PNREntity::getMessageseq, x -> x.getStatus().equals(RecordStatus.RELEASED.getStatusCode()) ? true : false));
+                    .collect(Collectors.toMap(PNREntity::getMessageseq, x -> x.getStatus().equals(GroupMessageRecordStatus.RELEASED.getStatusCode()) ? true : false,(pnrEntity1, pnrEntity2) -> pnrEntity1));
             Map<Integer, PNREntity> seqPNREntityMap = pnrList.stream()
-                    .collect(Collectors.toMap(PNREntity::getMessageseq, x -> x));
+                    .collect(Collectors.toMap(PNREntity::getMessageseq, x -> x,(t, t2) -> t));
 
             if (Optional.ofNullable(seqReleasedStatusMap.get(1)).isPresent()) {
                 seqReleasedStatusMap.put(1, true);
-                if (!(seqPNREntityMap.get(1).getStatus().equals(RecordStatus.COMPLETED.getStatusCode()) ||
-                        seqPNREntityMap.get(1).getStatus().equals(RecordStatus.RELEASED.getStatusCode()))) {
+                if (!(seqPNREntityMap.get(1).getStatus().equals(GroupMessageRecordStatus.COMPLETED.getStatusCode()) ||
+                        seqPNREntityMap.get(1).getStatus().equals(GroupMessageRecordStatus.RELEASED.getStatusCode()))) {
                     returnList.add(seqPNREntityMap.get(1));
                 }
             }
@@ -67,78 +63,17 @@ public class ReleaseStrategyService {
                     //filter(x -> !seqPNREntityMap.get(x.getMessageseq()).getStatus().equals(RecordStatus.RELEASED.getStatusCode()))
                     .forEach(x -> {
                         seqReleasedStatusMap.put(x.getMessageseq(), true);
-                        if (!(x.getStatus().equals(RecordStatus.RELEASED.getStatusCode()) || x.getStatus().equals(RecordStatus.COMPLETED.getStatusCode()))) {
+                        if (!(x.getStatus().equals(GroupMessageRecordStatus.RELEASED.getStatusCode()) || x.getStatus().equals(GroupMessageRecordStatus.COMPLETED.getStatusCode()))) {
                             returnList.add(x);
                         }
                     });
-            returnMap.put(key,returnList);
-        });
-        return returnMap;
+
+        return returnList;
         } else {
             //null will only be returned when current record is PARENT.
             return null;
         }
     }
 
-    public static Map<String,List<PNREntity>>  releaseTest(List<PNREntity> pnrListTest) {
-        log.info("Getting all the messages from the table by pnr id");
-        //Optional<List<PNREntity>> pnrEntityList = msgGrpStoreRepository.findByPnrid(pnrEntity.getPnrid());
-        Map<String,List<PNREntity>> returnMap = new HashMap<String,List<PNREntity>>();
 
-        List<PNREntity> pnrListComplete = pnrListTest;
-
-        Map<String,List<PNREntity>> pnrMap =
-                pnrListComplete.stream().collect(Collectors.groupingBy(x->x.getDestination()));
-
-        pnrMap.keySet().stream().forEach( key-> {
-            List <PNREntity> pnrList = pnrMap.get(key);
-            List<PNREntity> returnList = new ArrayList<PNREntity>();
-            log.info("Messages are {}", pnrList);
-            Map<Integer, Boolean> seqReleasedStatusMap = pnrList.stream()
-                    .collect(Collectors.toMap(PNREntity::getMessageseq, x -> x.getStatus().equals(RecordStatus.RELEASED.getStatusCode()) ? true : false));
-            Map<Integer, PNREntity> seqPNREntityMap = pnrList.stream()
-                    .collect(Collectors.toMap(PNREntity::getMessageseq, x -> x));
-
-            if (Optional.ofNullable(seqReleasedStatusMap.get(1)).isPresent()) {
-                seqReleasedStatusMap.put(1, true);
-                if (!(seqPNREntityMap.get(1).getStatus().equals(RecordStatus.COMPLETED.getStatusCode()) ||
-                        seqPNREntityMap.get(1).getStatus().equals(RecordStatus.RELEASED.getStatusCode()))) {
-                    returnList.add(seqPNREntityMap.get(1));
-                }
-            }
-
-            log.info("seqReleasedStatusMap {}", seqReleasedStatusMap);
-            log.info("seqPNREntityMap {}", seqPNREntityMap);
-
-            pnrList.stream().sorted().
-                    filter(x -> Optional.ofNullable(seqReleasedStatusMap.get((x.getMessageseq() - 1))).isPresent()).
-                    filter(x -> seqReleasedStatusMap.get(x.getMessageseq() - 1))
-                    //filter(x -> !seqPNREntityMap.get(x.getMessageseq()).getStatus().equals(RecordStatus.RELEASED.getStatusCode()))
-                    .forEach(x -> {
-                        seqReleasedStatusMap.put(x.getMessageseq(), true);
-                        if (!(x.getStatus().equals(RecordStatus.RELEASED.getStatusCode()) || x.getStatus().equals(RecordStatus.COMPLETED.getStatusCode()))) {
-                            returnList.add(x);
-                        }
-                    });
-            returnMap.put(key,returnList);
-        });
-        log.info("returning the list {}", returnMap);
-        return returnMap;
-    }
-
-    public static void main(String[] args) {
-        List<PNREntity> returnList = new ArrayList<PNREntity>();
-        returnList.add(PNREntity.builder().destination("x").pnrid("PNR123").messageseq(1).status(RecordStatus.RELEASED.getStatusCode()).build());
-        returnList.add(PNREntity.builder().destination("x").pnrid("PNR123").messageseq(3).status(RecordStatus.IN_PROGRESS.getStatusCode()).build());
-		returnList.add(PNREntity.builder().destination("x").pnrid("PNR123").messageseq(2).status(RecordStatus.RELEASED.getStatusCode()).build());
-		returnList.add(PNREntity.builder().destination("x").pnrid("PNR123").messageseq(5).status(RecordStatus.IN_PROGRESS.getStatusCode()).build());
-
-        returnList.add(PNREntity.builder().destination("y").pnrid("PNR123").messageseq(1).status(RecordStatus.RELEASED.getStatusCode()).build());
-        returnList.add(PNREntity.builder().destination("y").pnrid("PNR123").messageseq(3).status(RecordStatus.IN_PROGRESS.getStatusCode()).build());
-        returnList.add(PNREntity.builder().destination("y").pnrid("PNR123").messageseq(2).status(RecordStatus.RELEASED.getStatusCode()).build());
-        returnList.add(PNREntity.builder().destination("y").pnrid("PNR123").messageseq(5).status(RecordStatus.IN_PROGRESS.getStatusCode()).build());
-
-        releaseTest(returnList);
-
-    }
 }

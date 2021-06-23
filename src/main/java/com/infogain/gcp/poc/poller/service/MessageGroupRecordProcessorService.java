@@ -5,7 +5,7 @@ import com.google.cloud.spanner.Statement;
 import com.google.common.base.Stopwatch;
 import com.infogain.gcp.poc.entity.PNREntity;
 import com.infogain.gcp.poc.poller.repository.GroupMessageStoreRepository;
-import com.infogain.gcp.poc.poller.util.RecordStatus;
+import com.infogain.gcp.poc.poller.util.OutboxRecordStatus;
 import com.infogain.gcp.poc.service.PNRSequencingService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +52,7 @@ public class MessageGroupRecordProcessorService {
         log.info("total record -> {} to process by application->  {}", recordToProcess.size(), ip);
         log.info("RECORD {}", recordToProcess);
         recordToProcess.stream().forEach(x->{
-            updateRecord(x, RecordStatus.CREATED.getStatusCode());
+            updateRecord(x, OutboxRecordStatus.CREATED.getStatusCode());
                     pnrSequencingService.processPNR(x.buildModel());
         }
         );
@@ -72,7 +72,7 @@ public class MessageGroupRecordProcessorService {
     }
 
     private void updateRecord(PNREntity entity, int status) {
-        if(status==RecordStatus.FAILED.getStatusCode()) {
+        if(status== OutboxRecordStatus.FAILED.getStatusCode()) {
             entity.setRetry_count(entity.getRetry_count()+1);
         }
         entity.setStatus(status);

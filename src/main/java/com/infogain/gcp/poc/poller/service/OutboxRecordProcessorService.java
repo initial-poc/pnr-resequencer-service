@@ -2,44 +2,28 @@ package com.infogain.gcp.poc.poller.service;
 
 import com.google.cloud.spanner.Statement;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 import com.infogain.gcp.poc.poller.entity.OutboxEntity;
 import com.infogain.gcp.poc.poller.repository.SpannerOutboxRepository;
-import com.infogain.gcp.poc.poller.util.RecordStatus;
+import com.infogain.gcp.poc.poller.util.OutboxRecordStatus;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gcp.data.spanner.core.SpannerOperations;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class OutboxRecordProcessorService {
-
-    ExecutorService executorServices = null;
-
     private final APIGatewayService outboxStatusService;
     private final SpannerOutboxRepository spannerOutboxRepository;
     private final String ip;
+    private static final long POLLER_WAIT_TIME_FOR_NEXT_INTERVAL_IN_MILI_SEC= 2000;
+    private static final long POLLER_IMMEDIATE_EXECUTION_INTERVAL_IN_MILI_SEC= 1;
 
-    //@Value(value = "${limit}")
-    private static int recordLimit = 900;
-    @Value(value = "${threads}")
-    private int MAX_THREAD_LIMIT;
-
-    private static final String OUTBOX_SQL = "SELECT * FROM OUTBOX WHERE STATUS =0 order by updated desc LIMIT %s";
+    private static final String OUTBOX_SQL = "SELECT * FROM OUTBOX WHERE STATUS =0 order by updated desc";
     private static final String GRP_MSG_STORE_FAILED_SQL =
             "SELECT * FROM group_message_store WHERE STATUS =4 and retry_count<=3";
     private static final String OUTBOX_STUCK_RECORD_SQL =
@@ -53,34 +37,24 @@ public class OutboxRecordProcessorService {
         ip = InetAddress.getLocalHost().getHostAddress();
     }
 
-    @PostConstruct
-    public void initializeThread(){
-        executorServices = Executors.newFixedThreadPool(MAX_THREAD_LIMIT);
-    }
-    public void processRecords() {
+    public long processRecords() {
         List<OutboxEntity> outboxEntities = getRecord(OUTBOX_SQL);
         if(outboxEntities.isEmpty()){
             log.info("=========   Record not found for processing =========");
-            return;
+            return POLLER_WAIT_TIME_FOR_NEXT_INTERVAL_IN_MILI_SEC;
         }
-        List<List<OutboxEntity>> records = Lists.partition(outboxEntities, (outboxEntities.size()+1)/MAX_THREAD_LIMIT);
-        List<Future<String>> response = records.stream().map(entities -> executorServices.submit(() -> doProcess(entities))).collect(Collectors.toList());
-        try {
-            response.get(0).get();
-        }catch (Exception ex){
-            log.error("Exception occurred while getting response from thread",ex);
-        }
+        doProcess(outboxEntities);
+        return POLLER_IMMEDIATE_EXECUTION_INTERVAL_IN_MILI_SEC;
     }
 
     public void processFailedRecords() {
         doProcess(getRecord(GRP_MSG_STORE_FAILED_SQL));
     }
 
-    private String doProcess(List<OutboxEntity> recordToProcess) {
-        log.info("total record -> {} to process by application->  {}", recordToProcess.size(), ip);
+    private void doProcess(List<OutboxEntity> recordToProcess) {
+        log.info("Total record -> {} to process by application->  {}", recordToProcess.size(), ip);
         log.info("RECORD {}", recordToProcess);
-        process(recordToProcess);
-        return "success";
+        recordToProcess.forEach(outboxStatusService::processRecord);
     }
 
     private List<OutboxEntity> getRecord(String sql) {
@@ -88,24 +62,13 @@ public class OutboxRecordProcessorService {
         Stopwatch stopWatch = Stopwatch.createStarted();
         SpannerOperations spannerTemplate = spannerOutboxRepository.getSpannerTemplate();
         List<OutboxEntity> recordToProcess = spannerTemplate.query(OutboxEntity.class,
-                Statement.of(String.format(sql, recordLimit)), null);
+                Statement.of(sql), null);
         stopWatch.stop();
         log.info("Total time taken to fetch the records {}", stopWatch);
         log.info("Total record fetched from db {}",recordToProcess.size());
         return recordToProcess;
 
     }
-
-    private void process(List<OutboxEntity> outboxEntities) {
-        updateStatus(outboxEntities);
-        outboxEntities.stream().forEach(outboxStatusService::processRecord);
-    }
-
-    private void updateStatus(List<OutboxEntity> outboxEntities){
-        outboxEntities.stream().forEach(outboxEntity -> outboxEntity.setStatus(RecordStatus.COMPLETED.getStatusCode()));
-        spannerOutboxRepository.saveAll(outboxEntities);
-    }
-
 
 
 }

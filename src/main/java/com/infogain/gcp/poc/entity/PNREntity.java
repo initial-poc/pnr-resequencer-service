@@ -64,7 +64,7 @@ public class PNREntity implements Comparable<PNREntity>{
         pnrModel.setDestination(this.getDestination());
         pnrModel.setRetryCount(this.getRetry_count());
         pnrModel.setPnrid(this.getPnrid());
-        pnrModel.setMessageseq(this.getMessageseq());
+        pnrModel.setMessageseq(String.valueOf(this.getMessageseq()));
         pnrModel.setParentPnr(this.getParentPnr());
       //  BeanUtils.copyProperties(pnrModel, this);
         return pnrModel;

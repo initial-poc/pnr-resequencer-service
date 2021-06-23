@@ -18,7 +18,7 @@ public class PNRModel {
 	private String pnrid;
 
 	@JsonProperty("message")
-	private Integer messageseq;
+	private String messageseq;
 
 	@JsonProperty("payload")
 	private String payload;
@@ -39,7 +39,7 @@ public class PNRModel {
 	    public PNREntity buildEntity(){
 	        PNREntity pnrEntity = new PNREntity();
 	        pnrEntity.setPnrid(pnrid);
-	        pnrEntity.setMessageseq(messageseq);
+	        pnrEntity.setMessageseq(Integer.parseInt(messageseq));
 	        pnrEntity.setPayload(payload);
 	        pnrEntity.setTimestamp(Timestamp.parseTimestamp(timestamp));
 	        pnrEntity.setDestination(destination);
