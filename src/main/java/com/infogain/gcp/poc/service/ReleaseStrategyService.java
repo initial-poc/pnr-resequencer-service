@@ -3,6 +3,7 @@ package com.infogain.gcp.poc.service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Maps;
 import org.springframework.stereotype.Service;
 
 import com.infogain.gcp.poc.entity.PNREntity;
@@ -42,11 +43,12 @@ public class ReleaseStrategyService {
 
           //  pnrList.stream().collect(Collectors.toMap(pnrEntity1 -> pnrEntity1.getMessageseq(),o -> o,(pnrEntity1, pnrEntity2) -> pnrEntity1));
 
-
-            Map<Integer, Boolean> seqReleasedStatusMap = pnrList.stream()
-                    .collect(Collectors.toMap(PNREntity::getMessageseq, x -> x.getStatus().equals(GroupMessageRecordStatus.RELEASED.getStatusCode()) ? true : false,(pnrEntity1, pnrEntity2) -> pnrEntity1));
-            Map<Integer, PNREntity> seqPNREntityMap = pnrList.stream()
-                    .collect(Collectors.toMap(PNREntity::getMessageseq, x -> x,(t, t2) -> t));
+            Map<Integer, Boolean> seqReleasedStatusMap= Maps.newHashMap();
+            Map<Integer, PNREntity> seqPNREntityMap=Maps.newHashMap();
+            for(PNREntity entity: pnrList){
+                seqReleasedStatusMap.put(entity.getMessageseq(),isProcessed(entity));
+                seqPNREntityMap.put(entity.getMessageseq(),entity);
+            }
 
             if (Optional.ofNullable(seqReleasedStatusMap.get(1)).isPresent()) {
                 seqReleasedStatusMap.put(1, true);
@@ -55,7 +57,6 @@ public class ReleaseStrategyService {
                     returnList.add(seqPNREntityMap.get(1));
                 }
             }
-
 
             pnrList.stream().sorted().
                     filter(x -> Optional.ofNullable(seqReleasedStatusMap.get((x.getMessageseq() - 1))).isPresent()).
@@ -75,5 +76,11 @@ public class ReleaseStrategyService {
         }
     }
 
-
+private boolean isProcessed(PNREntity pnrEntity){
+        boolean result=false;
+    if ((pnrEntity.getStatus().equals(GroupMessageRecordStatus.RELEASED.getStatusCode()) || pnrEntity.getStatus().equals(GroupMessageRecordStatus.COMPLETED.getStatusCode()))) {
+      result=true;
+    }
+    return result;
+}
 }
