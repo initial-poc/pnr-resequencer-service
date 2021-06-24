@@ -1,17 +1,15 @@
 package com.infogain.gcp.poc.service;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
+import com.google.api.client.util.Lists;
 import com.google.common.collect.Maps;
-import org.springframework.stereotype.Service;
-
 import com.infogain.gcp.poc.entity.PNREntity;
 import com.infogain.gcp.poc.poller.repository.GroupMessageStoreRepository;
 import com.infogain.gcp.poc.util.GroupMessageRecordStatus;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
 
 @Slf4j
 @Service
@@ -44,17 +42,25 @@ public class ReleaseStrategyService {
           //  pnrList.stream().collect(Collectors.toMap(pnrEntity1 -> pnrEntity1.getMessageseq(),o -> o,(pnrEntity1, pnrEntity2) -> pnrEntity1));
 
             Map<Integer, Boolean> seqReleasedStatusMap= Maps.newHashMap();
-            Map<Integer, PNREntity> seqPNREntityMap=Maps.newHashMap();
+            Map<Integer, List<PNREntity>> seqPNREntityMap=Maps.newHashMap();
             for(PNREntity entity: pnrList){
                 seqReleasedStatusMap.put(entity.getMessageseq(),isProcessed(entity));
-                seqPNREntityMap.put(entity.getMessageseq(),entity);
+              if( seqPNREntityMap.containsKey(entity.getMessageseq())){
+                  List<PNREntity> pnrEntities = seqPNREntityMap.get(entity.getMessageseq());
+                  pnrEntities.add(entity);
+              }else{
+                  List<PNREntity> pnrEntities= Lists.newArrayList();
+                  pnrEntities.add(entity);
+                  seqPNREntityMap.put(entity.getMessageseq(),pnrEntities);
+              }
             }
 
             if (Optional.ofNullable(seqReleasedStatusMap.get(1)).isPresent()) {
                 seqReleasedStatusMap.put(1, true);
-                if (!(seqPNREntityMap.get(1).getStatus().equals(GroupMessageRecordStatus.COMPLETED.getStatusCode()) ||
-                        seqPNREntityMap.get(1).getStatus().equals(GroupMessageRecordStatus.RELEASED.getStatusCode()))) {
-                    returnList.add(seqPNREntityMap.get(1));
+                for(PNREntity entity:seqPNREntityMap.get(1)) {
+                    if (!isProcessed(entity)) {
+                        returnList.add(entity);
+                    }
                 }
             }
 
