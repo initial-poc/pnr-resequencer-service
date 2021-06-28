@@ -47,4 +47,12 @@ public class PNRModel {
 	        return pnrEntity;
 	    }
 
+	@Override
+	public String toString() {
+		return "PNRModel{" +
+				"pnrid='" + pnrid + '\'' +
+				", messageseq='" + messageseq + '\'' +
+				", destination='" + destination + '\'' +
+				'}';
+	}
 }

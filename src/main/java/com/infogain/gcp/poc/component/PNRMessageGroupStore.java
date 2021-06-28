@@ -37,13 +37,11 @@ public class PNRMessageGroupStore {
 		pnrEntity.setStatus(GroupMessageRecordStatus.IN_PROGRESS.getStatusCode());
 		pnrEntity.setInstance(ip);
 		pnrEntity.setUpdated(Timestamp.now());
-		log.info("saving message {}", pnrEntity);
 		groupMessageStoreRepository.save(pnrEntity);
 		return pnrEntity;
 	}
 
 	public void updateStatus(PNREntity entity, int status) {
-		log.info("Going to update the status in table as  {} for record ->{} ", status,entity);
 			entity.setStatus(status);
 			entity.setInstance(ip);
 			entity.setUpdated(Timestamp.now());
@@ -51,10 +49,8 @@ public class PNRMessageGroupStore {
 	}
 
 	public PNREntity getMessageById(PNRModel pnrModel) {
-		PNREntity	entity=groupMessageStoreRepository.findByPnridAndMessageseqAndDestination(pnrModel.getPnrid(),String.valueOf(pnrModel.getMessageseq()), pnrModel.getDestination());
-		log.info("record in DB {}",entity);
-		return entity;
-		
+		return groupMessageStoreRepository.findByPnridAndMessageseqAndDestination(pnrModel.getPnrid(),String.valueOf(pnrModel.getMessageseq()), pnrModel.getDestination());
+
 	}
 
 }

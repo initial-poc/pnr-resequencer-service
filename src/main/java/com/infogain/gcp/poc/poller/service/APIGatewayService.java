@@ -23,11 +23,14 @@ public class APIGatewayService {
     private static final String SEPARATOR = ":";
 
     public void processRecord(OutboxEntity outboxEntity) {
+        log.info("processing started for outboxEntity {}",outboxEntity);
         Stopwatch stopWatch = Stopwatch.createStarted();
         updateOutboxStatus( outboxEntity,OutboxRecordStatus.COMPLETED);
 
         String[] payloadArray =outboxEntity .getData().split(SEPARATOR);
         Arrays.stream(payloadArray).forEach(destination->doRelease(outboxEntity.buildModel(destination)));
+        stopWatch.stop();
+        log.info("total processing time {} for outboxEntity {}",stopWatch,outboxEntity);
     }
 
     private void doRelease(PNRModel pnrRecord) {

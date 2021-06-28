@@ -52,7 +52,6 @@ public class MessagePublisher {
 	private PubsubMessage getPubsubMessage(PNREntity pnrEntity) {
 
 		String message = convertMessage(pnrEntity);
-		log.info("message generated : {}", message);
 
 		ByteString data = ByteString.copyFromUtf8(message);
 

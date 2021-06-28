@@ -87,4 +87,13 @@ public class PNREntity implements Comparable<PNREntity>{
     public int hashCode() {
         return Objects.hash(pnrid, messageseq, destination);
     }
+
+    @Override
+    public String toString() {
+        return "PNREntity{" +
+                "pnrid='" + pnrid + '\'' +
+                ", messageseq=" + messageseq +
+                ", destination='" + destination + '\'' +
+                '}';
+    }
 }
