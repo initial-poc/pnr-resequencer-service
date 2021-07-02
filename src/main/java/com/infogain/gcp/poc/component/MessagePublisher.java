@@ -32,6 +32,13 @@ public class MessagePublisher {
 	@Value("${app.topic.name}")
 	private String topicName;
 
+
+
+	public void publishMessage(){
+
+	}
+
+
 	public void publishMessage(PNREntity entity) throws InterruptedException, IOException {
 
 		PubsubMessage pubsubMessage = getPubsubMessage(entity);
