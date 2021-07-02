@@ -65,7 +65,6 @@ public class OutboxRecordProcessorService {
                 Statement.of(sql), null);
         stopWatch.stop();
         log.info("Total time taken to fetch the records {}", stopWatch);
-        log.info("Total record fetched from db {}",recordToProcess.size());
         return recordToProcess;
 
     }
