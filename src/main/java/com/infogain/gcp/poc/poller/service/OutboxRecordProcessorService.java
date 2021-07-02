@@ -23,7 +23,7 @@ public class OutboxRecordProcessorService {
     private static final long POLLER_WAIT_TIME_FOR_NEXT_INTERVAL_IN_MILI_SEC= 2000;
     private static final long POLLER_IMMEDIATE_EXECUTION_INTERVAL_IN_MILI_SEC= 1;
 
-    private static final String OUTBOX_SQL = "SELECT * FROM OUTBOX WHERE STATUS =0 order by created desc limit 100";
+    private static final String OUTBOX_SQL = "SELECT * FROM OUTBOX WHERE STATUS =0 order by created limit 100";
     private static final String GRP_MSG_STORE_FAILED_SQL =
             "SELECT * FROM group_message_store WHERE STATUS =4 and retry_count<=3";
     private static final String OUTBOX_STUCK_RECORD_SQL =
