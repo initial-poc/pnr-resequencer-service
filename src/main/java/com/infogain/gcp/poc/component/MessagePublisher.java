@@ -50,8 +50,8 @@ public class MessagePublisher {
 			ApiFutures.addCallback(
 					future, PublisherUtil.getCallback(pubsubMessage), MoreExecutors.directExecutor());
 		} finally {
-			publisher.shutdown();
-			publisher.awaitTermination(1, TimeUnit.MINUTES);
+		//	publisher.shutdown();
+	//		publisher.awaitTermination(1, TimeUnit.MINUTES);
 		}
 
 	}
