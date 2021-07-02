@@ -37,14 +37,18 @@ public class APIGatewayService {
         stopWatch.stop();
         outboxEntity.setProcessing_time_millis(stopWatch.elapsed(TimeUnit.MILLISECONDS));
         updateOutboxStatus( outboxEntity,OutboxRecordStatus.COMPLETED);
-        log.info("total processing time {} for outboxEntity {}",stopWatch,outboxEntity);
+        log.info("processing done for outboxEntity {} and time taken {}",outboxEntity,stopWatch);
     }
 
     private void doRelease(PNRModel pnrRecord) {
       //  pnrSequencingService.processPNR(pnrRecord);
         PNREntity pnrEntity = pnrRecord.buildEntity();
         try {
+log.info("Publishing message {}",pnrEntity);
+            Stopwatch stopWatch = Stopwatch.createStarted();
             publisher.publishMessage(pnrRecord.buildEntity());
+stopWatch.stop();
+            log.info("Published message {} and total time taken {}",pnrEntity,stopWatch);
         }catch(Exception ex){
             log.info("exception occurred while publishing message {} ",pnrEntity);
             log.error("Exception -> {} ",ex);
