@@ -1,11 +1,12 @@
 server.port: 9000
 
 spring:
- profiles.active: emulator
+ profiles.active: dev
  cloud:
    gcp:
-     project-id: pnr-order-poc
-     # credentials.location: file:C:\\Users\\ashu3\\AppData\\Roaming\\gcloud\\application_default_credentials.json
+     project-id: sab-ors-poc-sbx-01-9096
+     credentials:
+       location: classpath:cred.json
      spanner:
        instance-id: instance-1
        database: database-1
@@ -15,7 +16,7 @@ spring:
 ## logging
 logging:
   pattern.console: '%d{yyyy-MM-dd HH:mm:ss} [%X{source}] [%X{correlation-id}] [%-5level] [%C:%L] - %m%n'
-  file: logs/spanner-pollar-convereter-publisher/app.log
+  file: logs/pnr-resequence-service/app.log
   level.org.springframework: info
 
 # actuator properties
@@ -26,7 +27,7 @@ management:
 
 info:
   app:
-    name: spanner-pollar-convereter-publisher
+    name: pnr-resequence-service
     description: Google cloud spanner poller converter publisher
     version: 1.0.0
     java-vendor: ${java.specification.vendor}
