@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: pnr-resequencer-service-deployment
 spec:
-  replicas: 4
+  replicas: 1
   selector:
     matchLabels:
       app: pnr-resequencer-service-pod
@@ -12,7 +12,19 @@ spec:
       labels:
         app: pnr-resequencer-service-pod
     spec:
+      volumes:
+      - name: pnr-resequencer
+        secret:
+          secretName: pubsub-key    
       containers:
-        - image: gcr.io/pnr-order-poc/pnr-resequencer-service:latest
+        - image: gcr.io/sab-ors-poc-sbx-01-9096/pnr-resequencer-service:latest
           name: pnr-resequencer-service
+          volumeMounts:
+          - name: pnr-resequencer
+            mountPath: /var/secrets/google
+            readOnly: true
+          env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /var/secrets/google/key.json   
+      
             
