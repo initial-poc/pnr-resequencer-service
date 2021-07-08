@@ -34,6 +34,7 @@ public class PNRMessageGroupStore {
 		pnrEntity.setStatus(RecordStatus.IN_PROGRESS.getStatusCode());
 		pnrEntity.setInstance(ip);
 		pnrEntity.setUpdated(Timestamp.now());
+		pnrEntity.setTimestamp(Timestamp.now());
 		log.info("saving message {}", pnrEntity);
 		groupMessageStoreRepository.save(pnrEntity);
 		return pnrEntity;
