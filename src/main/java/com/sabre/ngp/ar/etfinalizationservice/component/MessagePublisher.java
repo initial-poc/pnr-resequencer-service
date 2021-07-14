@@ -1,9 +1,7 @@
 package com.sabre.ngp.ar.etfinalizationservice.component;
 
 import com.google.api.core.ApiFuture;
-import com.google.api.core.ApiFutures;
 import com.google.cloud.pubsub.v1.Publisher;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
@@ -14,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -35,9 +34,17 @@ public class MessagePublisher {
               publisher = PublisherUtil.getPublisher(topicName);
             ApiFuture<String> future = publisher.publish(pubsubMessage);
             String s = future.get();
+
         } catch (Exception ex){
             log.error("Exception occurred while sending message ->{} Error -> {}",model,ex.getMessage());
             throw new RuntimeException(ex.getMessage());
+        }finally {
+            try {
+                publisher.shutdown();
+                publisher.awaitTermination(1, TimeUnit.MINUTES);
+            }catch (Exception ex){
+                log.info("Exception occurred while shutdown the pubsub {}",ex.getMessage());
+            }
         }
     }
 
