@@ -10,7 +10,7 @@ VOLUME /tmp
 EXPOSE 9000
 
 # application jar file when packaged
-ARG jar_file=target/pnr-resequencer-service.jar
+ARG jar_file=target/pnr-resequencer-service.jar-0.1
 
 # add application jar file to container
 COPY ${jar_file} pnr-resequencer-service.jar
