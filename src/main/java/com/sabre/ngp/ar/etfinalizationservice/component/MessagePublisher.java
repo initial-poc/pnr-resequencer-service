@@ -44,9 +44,10 @@ public class MessagePublisher {
     private PubsubMessage getPubsubMessage(PNRModel model) {
         String message = convert(model);
         ByteString data = ByteString.copyFromUtf8(message);
-        return PubsubMessage.newBuilder()
+        return PubsubMessage.newBuilder().putAttributes("locator",model.getLocator())
                 .setData(data)
                 .setOrderingKey(model.getLocator())
+
                 .build();
     }
 
