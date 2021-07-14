@@ -1,58 +1,35 @@
 package com.sabre.ngp.ar.etfinalizationservice.domainmodel;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.api.client.util.Lists;
 import com.google.cloud.Timestamp;
-import com.sabre.ngp.ar.etfinalizationservice.entity.PNREntity;
-
 import lombok.Getter;
 import lombok.Setter;
-import lombok.SneakyThrows;
 import lombok.ToString;
+
+import java.util.List;
 
 @Getter
 @Setter
-@ToString
 public class PNRModel {
-
-	@JsonProperty("pnrid")
-	private String pnrid;
-
-	@JsonProperty("message")
-	private String messageseq;
-
-	@JsonProperty("payload")
+	private String locator;
+	private long version;
+	private String payloadType;
+	private Timestamp created;
 	private String payload;
-
-	@JsonProperty("timestamp")
-	private String timestamp;
-
-	@JsonProperty("destination")
-	private String destination;
-
-	@JsonProperty("retry_count")
-	private Integer retryCount;
-
-	@JsonProperty("parent_pnr")
+	private long status;
+	private int retry_count;
+	private Timestamp updated;
+	private long processing_time_millis;
 	private String parentPnr;
-
-	 @SneakyThrows
-	    public PNREntity buildEntity(){
-	        PNREntity pnrEntity = new PNREntity();
-	        pnrEntity.setPnrid(pnrid);
-	        pnrEntity.setMessageseq(Integer.parseInt(messageseq));
-	        pnrEntity.setPayload(payload);
-	        pnrEntity.setTimestamp(Timestamp.parseTimestamp(timestamp));
-	        pnrEntity.setDestination(destination);
-	        pnrEntity.setParentPnr(parentPnr);
-	        return pnrEntity;
-	    }
+	private List<String> destinations= Lists.newArrayList();
 
 	@Override
 	public String toString() {
 		return "PNRModel{" +
-				"pnrid='" + pnrid + '\'' +
-				", messageseq='" + messageseq + '\'' +
-				", destination='" + destination + '\'' +
+				"locator='" + locator + '\'' +
+				", version=" + version +
+				", payloadType='" + payloadType + '\'' +
+				", destinations=" + destinations +
 				'}';
 	}
 }

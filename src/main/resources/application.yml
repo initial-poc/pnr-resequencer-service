@@ -1,66 +1,34 @@
-server.port: 9000
+server:
+  port: 8080
 
+batch:
+  size:
+    limit: 1000
+
+spanner:
+  instance:
+    id: instance-1
+  database:
+    id: database-1
+  project:
+    id: sab-ors-poc-sbx-01-9096
 spring:
- profiles.active: dev
- cloud:
-   gcp:
-     project-id: sab-ors-poc-sbx-01-9096
-     credentials:
-       location: classpath:cred.json
-     spanner:
-       instance-id: instance-1
-       database: database-1
+  application:
+    name: et-finalization-service
+    version: 0.0.1-init
 
-
-
-## logging
-logging:
-  pattern.console: '%d{yyyy-MM-dd HH:mm:ss} [%X{source}] [%X{correlation-id}] [%-5level] [%C:%L] - %m%n'
-  level.org.springframework: info
-  file:
-    name: logs/spanner-pollar-converter-publisher/app.log
-
-# actuator properties
-management:
-  endpoints.web.exposure.include: '*'
-  endpoint.health.show-details: always
-  info.git.mode: full
-
-info:
-  app:
-    name: spanner-pollar-convereter-publisher
-    description: Google cloud spanner poller converter publisher
-    version: 1.0.0
-    java-vendor: ${java.specification.vendor}
-
+topic:
+  name:
+    itinerary: projects/sab-ors-poc-sbx-01-9096/topics/itinerary-topic
+    teleType : projects/sab-ors-poc-sbx-01-9096/topics/teleType-topic
+    eticket : projects/sab-ors-poc-sbx-01-9096/topics/eticket-topic
 app:
-  topic.name: projects/sab-ors-poc-sbx-01-9096/topics/topic-1
----
-spring.profiles: dev
+  topic:
+    name: projects/sab-ors-poc-sbx-01-9096/topics/topic-1
 
----
-spring.profiles: test
-
----
-spring.profiles: prod
-
----
-spring.profiles: emulator
-
-spring:
-  jpa:
-    properties:
-      hibernate:
-        jdbc:
-          batch_size: 20
-  cloud:
-    gcp:
-      project-id: sab-ors-poc-sbx-01-9096
-      spanner:
-        emulator:
-          enabled: true
-        emulator-host: localhost:9010
-        instance-id: instance-1
-        database: database-1
-      pubsub:
-        emulator-host: localhost:8085
+# Monitoring related configurations
+ngp:
+  tracing:
+    default:
+      x-request-id:
+        mandatory: false # To force mandatory x-request-id headers set true

@@ -1,13 +1,13 @@
 package com.sabre.ngp.ar.etfinalizationservice.service;
 
-import com.google.cloud.spanner.Statement;
-import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 import com.sabre.ngp.ar.etfinalizationservice.entity.OutboxEntity;
 import com.sabre.ngp.ar.etfinalizationservice.repository.SpannerOutboxRepository;
+import com.sabre.ngp.ar.etfinalizationservice.util.OutboxRecordStatus;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.gcp.data.spanner.core.SpannerOperations;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.net.InetAddress;
@@ -16,28 +16,25 @@ import java.util.List;
 @Service
 @Slf4j
 public class OutboxRecordProcessorService {
-    private final PNRService outboxStatusService;
+    private final MessageService outboxStatusService;
     private final SpannerOutboxRepository spannerOutboxRepository;
     private final String ip;
     private static final long POLLER_WAIT_TIME_FOR_NEXT_INTERVAL_IN_MILI_SEC= 2000;
     private static final long POLLER_IMMEDIATE_EXECUTION_INTERVAL_IN_MILI_SEC= 1;
 
-    private static final String OUTBOX_SQL = "SELECT * FROM OUTBOX WHERE STATUS =0 order by created limit 100";
-    private static final String GRP_MSG_STORE_FAILED_SQL =
-            "SELECT * FROM group_message_store WHERE STATUS =4 and retry_count<=3";
-    private static final String OUTBOX_STUCK_RECORD_SQL =
-            "SELECT * FROM OUTBOX WHERE STATUS =1 and TIMESTAMP_DIFF(CURRENT_TIMESTAMP,updated, MINUTE)>5";
+    @Value("${batch.size.limit}")
+    private Integer batchUpdateLimit;
 
     @Autowired
     @SneakyThrows
-    public OutboxRecordProcessorService(PNRService outboxStatusService, SpannerOutboxRepository spannerOutboxRepository) {
+    public OutboxRecordProcessorService(MessageService outboxStatusService, SpannerOutboxRepository spannerOutboxRepository) {
         this.outboxStatusService = outboxStatusService;
         this.spannerOutboxRepository = spannerOutboxRepository;
         ip = InetAddress.getLocalHost().getHostAddress();
     }
 
     public long processRecords() {
-        List<OutboxEntity> outboxEntities = getRecord(OUTBOX_SQL);
+        List<OutboxEntity> outboxEntities = spannerOutboxRepository.getRecords();
         if(outboxEntities.isEmpty()){
             log.info("=========   Record not found for processing =========");
             return POLLER_WAIT_TIME_FOR_NEXT_INTERVAL_IN_MILI_SEC;
@@ -46,27 +43,25 @@ public class OutboxRecordProcessorService {
         return POLLER_IMMEDIATE_EXECUTION_INTERVAL_IN_MILI_SEC;
     }
 
-    public void processFailedRecords() {
-        doProcess(getRecord(GRP_MSG_STORE_FAILED_SQL));
-    }
 
     private void doProcess(List<OutboxEntity> recordToProcess) {
         log.info("Total record -> {} to process by application->  {}", recordToProcess.size(), ip);
-        log.info("RECORD {}", recordToProcess);
-        recordToProcess.forEach(outboxStatusService::processRecord);
+       // recordToProcess.stream().forEach(entity -> spannerOutboxRepository.update(entity,OutboxRecordStatus.IN_PROGRESS));
+
+        batchUpdateRecords(recordToProcess);
+        outboxStatusService.handleMessage(recordToProcess);
     }
 
-    private List<OutboxEntity> getRecord(String sql) {
-        log.info("Getting record to process by application->  {}", ip);
-        Stopwatch stopWatch = Stopwatch.createStarted();
-        SpannerOperations spannerTemplate = spannerOutboxRepository.getSpannerTemplate();
-        List<OutboxEntity> recordToProcess = spannerTemplate.query(OutboxEntity.class,
-                Statement.of(sql), null);
-        stopWatch.stop();
-        log.info("Total time taken to fetch the records {}", stopWatch);
-        return recordToProcess;
 
+private void batchUpdateRecords(List<OutboxEntity> recordToProcess){
+    if(recordToProcess.size()>=batchUpdateLimit){
+        List<List<OutboxEntity>> subSets = Lists.partition(recordToProcess, batchUpdateLimit);
+        log.info("Record split the records {} ",subSets.size());
+        subSets.stream().forEach(entities -> spannerOutboxRepository.batchUpdate(entities, OutboxRecordStatus.IN_PROGRESS));
+    }else{
+        spannerOutboxRepository.batchUpdate(recordToProcess, OutboxRecordStatus.IN_PROGRESS);
     }
+}
 
 
 }

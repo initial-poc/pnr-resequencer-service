@@ -3,47 +3,45 @@ package com.sabre.ngp.ar.etfinalizationservice.entity;
 import com.google.cloud.Timestamp;
 import com.sabre.ngp.ar.etfinalizationservice.domainmodel.PNRModel;
 import lombok.*;
-import org.springframework.cloud.gcp.data.spanner.core.mapping.PrimaryKey;
-import org.springframework.cloud.gcp.data.spanner.core.mapping.Table;
 
 
-@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-@Table(name = "outbox")
+@Getter
+@Setter
 public class OutboxEntity {
-    @PrimaryKey(keyOrder = 1)
     private String locator;
-    @PrimaryKey(keyOrder = 2)
-    private String version;
+    private long version;
+    private String payloadType;
     private Timestamp created;
-    private String data;
-    private int status;
+    private String payload;
+    private long status;
     private int retry_count;
     private Timestamp updated;
     private long processing_time_millis;
     private String parentPnr;
 
-    @SneakyThrows
-    public PNRModel buildModel() {
-        PNRModel pnrModel = new PNRModel();
-        pnrModel.setMessageseq(this.getVersion());
-        pnrModel.setPayload(this.getData());
-        pnrModel.setPnrid(this.getLocator());
-        pnrModel.setTimestamp(this.getCreated()==null?Timestamp.now().toString():this.getCreated().toString());
-        pnrModel.setParentPnr(this.parentPnr);
-        return pnrModel;
+
+    public PNRModel buildEntity(){
+        PNRModel model= new PNRModel();
+        model.setPayload(this.getPayload());
+        model.setVersion(this.getVersion());
+        model.setParentPnr(this.getParentPnr());
+        model.setCreated(this.getCreated());
+        model.setPayloadType(this.getPayloadType());
+        model.setStatus(this.getStatus());
+        model.setLocator(this.getLocator());
+        model.setUpdated(this.getUpdated());
+    return model;
     }
-    public PNRModel buildModel(String destination) {
-        PNRModel pnrModel = new PNRModel();
-        pnrModel.setMessageseq(this.getVersion());
-        pnrModel.setPayload(this.getData());
-        pnrModel.setPnrid(this.getLocator());
-        pnrModel.setTimestamp(this.getCreated()==null?Timestamp.now().toString():this.getCreated().toString());
-        pnrModel.setParentPnr(this.parentPnr);
-        pnrModel.setDestination(destination);
-        return pnrModel;
+
+    @Override
+    public String toString() {
+        return "OutboxEntity{" +
+                "locator='" + locator + '\'' +
+                ", version=" + version +
+                ", payloadType='" + payloadType + '\'' +
+                '}';
     }
 }

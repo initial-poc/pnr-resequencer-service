@@ -4,17 +4,14 @@ import com.google.api.core.ApiFuture;
 import com.google.api.core.ApiFutures;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
+import com.sabre.ngp.ar.etfinalizationservice.domainmodel.PNRModel;
 import com.sabre.ngp.ar.etfinalizationservice.util.PublisherUtil;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import com.sabre.ngp.ar.etfinalizationservice.entity.PNREntity;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
@@ -23,47 +20,44 @@ import java.io.IOException;
 @Slf4j
 public class MessagePublisher {
 
-    private final MessageConverter messageConverter;
+    private final Gson gson;
 
-    @Value("${app.topic.name}")
-    private String topicName;
+    public void publishMessage(PNRModel model) throws InterruptedException, IOException {
 
-
-    public void publishMessage() {
-
+   model.getDestinations().stream().forEach(topicName ->sendMessage(topicName,model) );
     }
 
-
-    public void publishMessage(PNREntity entity) throws InterruptedException, IOException {
-
-        PubsubMessage pubsubMessage = getPubsubMessage(entity);
-        Publisher publisher = PublisherUtil.getPublisher(topicName);
-        ApiFuture<String> future = publisher.publish(pubsubMessage);
+    private void sendMessage(String topicName,PNRModel model)  {
+        PubsubMessage pubsubMessage = getPubsubMessage(model);
+        Publisher publisher =null;
 
         try {
-
-            ApiFutures.addCallback(
-                    future, PublisherUtil.getCallback(pubsubMessage), MoreExecutors.directExecutor());
-        } finally {
-
+              publisher = PublisherUtil.getPublisher(topicName);
+            ApiFuture<String> future = publisher.publish(pubsubMessage);
+            String s = future.get();
+        } catch (Exception ex){
+            log.error("Exception occurred while sending message ->{} Error -> {}",model,ex.getMessage());
+            throw new RuntimeException(ex.getMessage());
         }
-
     }
 
-    private PubsubMessage getPubsubMessage(PNREntity pnrEntity) {
-
-        String message = convertMessage(pnrEntity);
-
+    private PubsubMessage getPubsubMessage(PNRModel model) {
+        String message = convert(model);
         ByteString data = ByteString.copyFromUtf8(message);
-
         return PubsubMessage.newBuilder()
                 .setData(data)
-                .setOrderingKey(pnrEntity.getPnrid())
+                .setOrderingKey(model.getLocator())
                 .build();
     }
 
-    private String convertMessage(PNREntity entity) {
-        return messageConverter.convert(entity);
 
+    public String convert(PNRModel model) {
+        String result = "";
+        try {
+            result = gson.toJson(model);
+        } catch (Exception e) {
+            log.error("Exception while converting record to json {}", e);
+        }
+        return result;
     }
 }

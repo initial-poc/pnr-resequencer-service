@@ -25,14 +25,13 @@ public class PublisherUtil {
             public void onFailure(Throwable throwable) {
                 if (throwable instanceof ApiException) {
                     ApiException apiException = ((ApiException) throwable);
-                    log.error("Exception code : {}",String.valueOf(apiException.getStatusCode().getCode()));
                     log.error("Exception while publishing the message : {} ", apiException.getMessage());
                 }
             }
 
             @Override
             public void onSuccess(String messageId) {
-                log.info("Message has been successfully published : {} ",pubsubMessage.getData() + " : " + messageId);
+                log.info("Message has been successfully published : {} ",pubsubMessage.getData());
             }
         };
     }
