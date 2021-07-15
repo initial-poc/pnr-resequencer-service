@@ -46,8 +46,6 @@ public class OutboxRecordProcessorService {
 
     private void doProcess(List<OutboxEntity> recordToProcess) {
         log.info("Total record -> {} to process by application->  {}", recordToProcess.size(), ip);
-       // recordToProcess.stream().forEach(entity -> spannerOutboxRepository.update(entity,OutboxRecordStatus.IN_PROGRESS));
-
         batchUpdateRecords(recordToProcess);
         outboxStatusService.handleMessage(recordToProcess);
     }

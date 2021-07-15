@@ -10,7 +10,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import java.util.SortedSet;
 
 @SpringBootApplication
-@EnableAsync
 public class GenericSpringBootApplication implements CommandLineRunner {
 
     @Autowired

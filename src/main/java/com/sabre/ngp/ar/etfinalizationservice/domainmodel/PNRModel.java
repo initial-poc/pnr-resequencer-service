@@ -13,7 +13,6 @@ import java.util.List;
 public class PNRModel {
 	private String locator;
 	private long version;
-	private String payloadType;
 	private Timestamp created;
 	private String payload;
 	private long status;
@@ -28,7 +27,6 @@ public class PNRModel {
 		return "PNRModel{" +
 				"locator='" + locator + '\'' +
 				", version=" + version +
-				", payloadType='" + payloadType + '\'' +
 				", destinations=" + destinations +
 				'}';
 	}

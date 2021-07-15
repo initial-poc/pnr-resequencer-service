@@ -13,6 +13,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 @Service
 @Slf4j
@@ -22,10 +24,10 @@ public class MessageService {
     private final SpannerOutboxRepository spannerOutboxRepository;
     private final MessagePublisher publisher;
     private final TopicRule topicRule;
+    Executor executor = Executors.newFixedThreadPool(30);
 
-@Async
     public void handleMessage(List<OutboxEntity> entities){
-        entities.forEach(this::doRelease);
+        entities.forEach( entity->executor.execute(() ->doRelease(entity)));
     }
 
     private void doRelease(OutboxEntity entity) {

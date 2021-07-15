@@ -13,7 +13,6 @@ import lombok.*;
 public class OutboxEntity {
     private String locator;
     private long version;
-    private String payloadType;
     private Timestamp created;
     private String payload;
     private long status;
@@ -29,7 +28,6 @@ public class OutboxEntity {
         model.setVersion(this.getVersion());
         model.setParentPnr(this.getParentPnr());
         model.setCreated(this.getCreated());
-        model.setPayloadType(this.getPayloadType());
         model.setStatus(this.getStatus());
         model.setLocator(this.getLocator());
         model.setUpdated(this.getUpdated());
@@ -41,7 +39,6 @@ public class OutboxEntity {
         return "OutboxEntity{" +
                 "locator='" + locator + '\'' +
                 ", version=" + version +
-                ", payloadType='" + payloadType + '\'' +
                 '}';
     }
 }
