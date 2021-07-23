@@ -6,9 +6,13 @@ import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 @Configuration
 @Slf4j
@@ -21,6 +25,8 @@ public class AppConfig {
     @Value("${spanner.project.id}")
     private String projectId;
 
+    @Value("${threadCount:50}")
+    private Integer maxThreadCount;
 
     @Bean("databaseClient")
     public DatabaseClient getDatabaseClient() {
@@ -44,4 +50,10 @@ public class AppConfig {
         return new Gson();
     }
 
+
+    @Bean("pollerThreadExecutor")
+    public Executor  pollerThreadExecutor(){
+        log.info("Creating thread pool of size -> {}",maxThreadCount);
+        return Executors.newFixedThreadPool(maxThreadCount);
+    }
 }

@@ -27,6 +27,7 @@ public class MessagePublisher {
     }
 
     private void sendMessage(String topicName,PNRModel model)  {
+        topicName="projects/sab-ors-poc-sbx-01-9096/topics/itinerary-topic";
         PubsubMessage pubsubMessage = getPubsubMessage(model);
         Publisher publisher =null;
 

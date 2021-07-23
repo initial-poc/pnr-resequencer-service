@@ -9,6 +9,7 @@ import com.sabre.ngp.ar.etfinalizationservice.rule.TopicRule;
 import com.sabre.ngp.ar.etfinalizationservice.util.OutboxRecordStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -24,10 +25,11 @@ public class MessageService {
     private final SpannerOutboxRepository spannerOutboxRepository;
     private final MessagePublisher publisher;
     private final TopicRule topicRule;
-    Executor executor = Executors.newFixedThreadPool(30);
+
+    private final Executor pollerThreadExecutor;
 
     public void handleMessage(List<OutboxEntity> entities){
-        entities.forEach( entity->executor.execute(() ->doRelease(entity)));
+        entities.forEach( entity->pollerThreadExecutor.execute(() ->doRelease(entity)));
     }
 
     private void doRelease(OutboxEntity entity) {

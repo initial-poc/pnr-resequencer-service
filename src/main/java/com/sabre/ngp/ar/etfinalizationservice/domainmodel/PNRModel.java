@@ -16,7 +16,6 @@ public class PNRModel {
 	private Timestamp created;
 	private String payload;
 	private long status;
-	private int retry_count;
 	private Timestamp updated;
 	private long processing_time_millis;
 	private String parentPnr;
