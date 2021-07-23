@@ -19,6 +19,15 @@ spec:
       containers:
         - image: gcr.io/sab-ors-poc-sbx-01-9096/pnr-resequencer-service:latest
           name: pnr-resequencer-service
+          resources:
+          limits:
+            cpu: 5000m
+            ephemeral-storage: 2Gi
+            memory: 2Gi
+          requests:
+            cpu: 5000m
+            ephemeral-storage: 2Gi
+            memory: 2Gi
           volumeMounts:
           - name: pnr-resequencer
             mountPath: /var/secrets/google
