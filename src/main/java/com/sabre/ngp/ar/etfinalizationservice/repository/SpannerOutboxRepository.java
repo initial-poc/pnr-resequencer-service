@@ -2,6 +2,7 @@ package com.sabre.ngp.ar.etfinalizationservice.repository;
 
 import com.google.api.client.util.Lists;
 import com.google.cloud.spanner.*;
+import com.google.common.base.Stopwatch;
 import com.sabre.ngp.ar.etfinalizationservice.entity.OutboxEntity;
 import com.sabre.ngp.ar.etfinalizationservice.util.OutboxRecordStatus;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class SpannerOutboxRepository {
     private static final String OUTBOX_SQL = "select * from outbox where created in (select  min(created) from OUTBOX  where status in (0,3)  limit 100) limit 100";
 
     public List<OutboxEntity> getRecords() {
+        Stopwatch stopwatch= Stopwatch.createStarted();
         ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(OUTBOX_SQL));
         List<OutboxEntity> outboxEntities = Lists.newArrayList();
         while (rs.next()) {
@@ -36,6 +38,8 @@ public class SpannerOutboxRepository {
             entity.setStatus(rs.getLong("status"));
             outboxEntities.add(entity);
         }
+        stopwatch=    stopwatch.stop();
+        log.info("Query took {} to get records of {}",stopwatch,outboxEntities.size());
         return outboxEntities;
     }
 
