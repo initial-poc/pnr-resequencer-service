@@ -20,7 +20,7 @@ public class SpannerOutboxRepository {
 
 
     private final DatabaseClient databaseClient;
-    private static final String OUTBOX_SQL = "select * from outbox where created in (select  min(created) from OUTBOX  where status in (0,3) group by created limit 100) limit 100";
+    private static final String OUTBOX_SQL = "select * from outbox where created in (select  min(created) from OUTBOX  where status in (0,3) group by locator limit 100) limit 100";
 
     public List<OutboxEntity> getRecords() {
         Stopwatch stopwatch= Stopwatch.createStarted();
