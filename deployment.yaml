@@ -25,6 +25,8 @@ spec:
             readOnly: true
           env:
           - name: GOOGLE_APPLICATION_CREDENTIALS
-            value: /var/secrets/google/key.json   
+            value: /var/secrets/google/key.json
+          - name: threadCount
+            value: 50
       
             
