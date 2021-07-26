@@ -33,7 +33,7 @@ public class MessageService {
         List<List<OutboxEntity>> subRecords=null;
         if(entities.size()>=maxThreadCount) {
 
-            List<List<OutboxEntity>> subSets = Lists.partition(entities, (entities.size() + 1) / maxThreadCount);
+            subRecords = Lists.partition(entities, (entities.size() + 1) / maxThreadCount);
         }else{
             subRecords=List.of(entities);
         }
