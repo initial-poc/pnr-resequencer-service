@@ -32,6 +32,9 @@ public class AppConfig {
     @Value("${threadCount}")
     private Integer maxThreadCount;
 
+    @Value("${pubsubBatchSize}")
+    private long pubsubBatchSize;
+
     @Bean("databaseClient")
     public DatabaseClient getDatabaseClient() {
         SpannerOptions options = SpannerOptions.newBuilder().build();
@@ -67,7 +70,7 @@ public class AppConfig {
     @Bean("pubsubBatchSetting")
     public BatchingSettings PubSubBatchConfiguration(){
         long requestBytesThreshold = 5000L; // default : 1 byte
-        long messageCountBatchSize = 20L; // default : 1 message
+       // long messageCountBatchSize = 20L; // default : 1 message
 
          Duration publishDelayThreshold = Duration.ofMillis(1000); // default : 1 ms
 
@@ -75,7 +78,7 @@ public class AppConfig {
         // publish, whichever condition is met first.
         return
                 BatchingSettings.newBuilder()
-                        .setElementCountThreshold(messageCountBatchSize)
+                        .setElementCountThreshold(pubsubBatchSize)
                         .setRequestByteThreshold(requestBytesThreshold)
                         .setDelayThreshold(publishDelayThreshold)
                         .build();

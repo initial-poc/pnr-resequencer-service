@@ -30,13 +30,18 @@ public class MessageService {
     private final ThreadPoolExecutor threadPoolExecutor;
 
     public void handleMessage(List<OutboxEntity> entities)  {
+        List<List<OutboxEntity>> subRecords=null;
+        if(entities.size()>=maxThreadCount) {
 
-        List<List<OutboxEntity>> subSets = Lists.partition(entities, (entities.size()+1)/maxThreadCount);
-        log.info("Number of chunks {} ",subSets.size());
+            List<List<OutboxEntity>> subSets = Lists.partition(entities, (entities.size() + 1) / maxThreadCount);
+        }else{
+            subRecords=List.of(entities);
+        }
+        log.info("Number of chunks {} ",subRecords.size());
         while(true){
           if(  threadPoolExecutor.getActiveCount()==0){
               log.info("Threads are available for processing records");
-              subSets.forEach( entity->threadPoolExecutor.execute(() ->publishRecord(entity)));
+              subRecords.forEach( entity->threadPoolExecutor.execute(() ->publishRecord(entity)));
               break;
             }else{
               log.info("All threads are busy with task, waiting...");

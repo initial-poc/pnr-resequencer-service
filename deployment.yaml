@@ -36,6 +36,8 @@ spec:
           - name: threadCount
             value: "5"
           - name: queryLimit
-            value: "100"          
+            value: "100"      
+          - name: pubsubBatchSize
+            value: "50"          
       
             
