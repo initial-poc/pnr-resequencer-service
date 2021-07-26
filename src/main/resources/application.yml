@@ -22,13 +22,4 @@ topic:
     itinerary: projects/sab-ors-poc-sbx-01-9096/topics/itinerary-topic
     teleType : projects/sab-ors-poc-sbx-01-9096/topics/teleType-topic
     eticket : projects/sab-ors-poc-sbx-01-9096/topics/eticket-topic
-app:
-  topic:
-    name: projects/sab-ors-poc-sbx-01-9096/topics/topic-1
 
-# Monitoring related configurations
-ngp:
-  tracing:
-    default:
-      x-request-id:
-        mandatory: false # To force mandatory x-request-id headers set true

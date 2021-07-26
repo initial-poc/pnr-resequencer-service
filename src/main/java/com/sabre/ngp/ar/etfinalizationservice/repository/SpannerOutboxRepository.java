@@ -18,13 +18,15 @@ import java.util.List;
 
 public class SpannerOutboxRepository {
 
+    @org.springframework.beans.factory.annotation.Value("${queryLimit:50}")
+    private String queryLimit;
 
     private final DatabaseClient databaseClient;
-    private static final String OUTBOX_SQL = "select * from outbox where created in (select  min(created) from OUTBOX  where status in (0,3) group by locator limit 100) limit 100";
+    private static final String OUTBOX_SQL = "select * from outbox where created in (select  min(created) from OUTBOX  where status in (0,3) group by locator limit %s) limit %s";
 
     public List<OutboxEntity> getRecords() {
         Stopwatch stopwatch= Stopwatch.createStarted();
-        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(OUTBOX_SQL));
+        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, queryLimit,queryLimit)));
         List<OutboxEntity> outboxEntities = Lists.newArrayList();
         while (rs.next()) {
             OutboxEntity entity = new OutboxEntity();

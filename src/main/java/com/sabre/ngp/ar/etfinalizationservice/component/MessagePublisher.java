@@ -6,7 +6,7 @@ import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.sabre.ngp.ar.etfinalizationservice.domainmodel.PNRModel;
-import com.sabre.ngp.ar.etfinalizationservice.util.PublisherUtil;
+import com.sabre.ngp.ar.etfinalizationservice.util.PublisherUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -18,8 +18,9 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 @Slf4j
 public class MessagePublisher {
-
     private final Gson gson;
+private final PublisherUtility publisherUtility;
+private final Publisher pubsubPublisher;
 
     public void publishMessage(PNRModel model) throws InterruptedException, IOException {
 
@@ -27,22 +28,22 @@ public class MessagePublisher {
     }
 
     private void sendMessage(String topicName,PNRModel model)  {
-        topicName="projects/sab-ors-poc-sbx-01-9096/topics/itinerary-topic";
+
         PubsubMessage pubsubMessage = getPubsubMessage(model);
         Publisher publisher =null;
 
         try {
-              publisher = PublisherUtil.getPublisher(topicName);
-            ApiFuture<String> future = publisher.publish(pubsubMessage);
-            String s = future.get();
+         //     publisher = publisherUtility.getPublisher(topicName);
+            ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
+         //   String s = future.get();
 
         } catch (Exception ex){
             log.error("Exception occurred while sending message ->{} Error -> {}",model,ex.getMessage());
             throw new RuntimeException(ex.getMessage());
         }finally {
             try {
-                publisher.shutdown();
-                publisher.awaitTermination(1, TimeUnit.MINUTES);
+              //  publisher.shutdown();
+               // publisher.awaitTermination(1, TimeUnit.MINUTES);
             }catch (Exception ex){
                 log.info("Exception occurred while shutdown the pubsub {}",ex.getMessage());
             }

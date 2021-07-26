@@ -1,6 +1,7 @@
 package com.sabre.ngp.ar.etfinalizationservice.service;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 import com.sabre.ngp.ar.etfinalizationservice.component.MessagePublisher;
 import com.sabre.ngp.ar.etfinalizationservice.domainmodel.PNRModel;
 import com.sabre.ngp.ar.etfinalizationservice.entity.OutboxEntity;
@@ -10,26 +11,50 @@ import com.sabre.ngp.ar.etfinalizationservice.util.OutboxRecordStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class MessageService {
-
+    @Value("${threadCount}")
+    private Integer maxThreadCount;
     private final SpannerOutboxRepository spannerOutboxRepository;
     private final MessagePublisher publisher;
     private final TopicRule topicRule;
 
-    private final Executor pollerThreadExecutor;
+    private final ThreadPoolExecutor threadPoolExecutor;
 
-    public void handleMessage(List<OutboxEntity> entities){
-        entities.forEach( entity->pollerThreadExecutor.execute(() ->doRelease(entity)));
+    public void handleMessage(List<OutboxEntity> entities)  {
+
+        List<List<OutboxEntity>> subSets = Lists.partition(entities, (entities.size()+1)/maxThreadCount);
+        log.info("Number of chunks {} ",subSets.size());
+        while(true){
+          if(  threadPoolExecutor.getActiveCount()==0){
+              log.info("Threads are available for processing records");
+              subSets.forEach( entity->threadPoolExecutor.execute(() ->publishRecord(entity)));
+              break;
+            }else{
+              log.info("All threads are busy with task, waiting...");
+          }
+          try {
+              TimeUnit.MILLISECONDS.sleep(200);
+          }catch(Exception ex){
+              log.error("error {}",ex.getMessage());
+          }
+        }
+
+
+    }
+
+
+    private  void publishRecord(List<OutboxEntity> entities){
+        log.info("Thread -> {} Number of Records {}",Thread.currentThread().getName(),entities.size());
+        entities.stream().forEach(this::doRelease);
     }
 
     private void doRelease(OutboxEntity entity) {

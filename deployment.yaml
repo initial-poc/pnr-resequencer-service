@@ -34,6 +34,8 @@ spec:
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /var/secrets/google/key.json
           - name: threadCount
-            value: "50"
+            value: "5"
+          - name: queryLimit
+            value: "100"          
       
             

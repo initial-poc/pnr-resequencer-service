@@ -1,24 +1,30 @@
 package com.sabre.ngp.ar.etfinalizationservice.util;
 
 import com.google.api.core.ApiFutureCallback;
+import com.google.api.gax.batching.BatchingSettings;
 import com.google.api.gax.rpc.ApiException;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.pubsub.v1.PubsubMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
 @Slf4j
-public class PublisherUtil {
+@Component
+@RequiredArgsConstructor
+public class PublisherUtility {
 
-    public static Publisher getPublisher(String topicName) throws IOException {
+    private final BatchingSettings pubsubBatchSetting;
+    public   Publisher getPublisher(String topicName) throws IOException {
         return Publisher.newBuilder(topicName)
                 .setEndpoint("us-central1-pubsub.googleapis.com:443")
-                .setEnableMessageOrdering(true)
+                .setEnableMessageOrdering(true).setBatchingSettings(pubsubBatchSetting)
                 .build();
     }
 
-    public static ApiFutureCallback<String> getCallback(PubsubMessage pubsubMessage) {
+    public   ApiFutureCallback<String> getCallback(PubsubMessage pubsubMessage) {
         return new ApiFutureCallback<String>() {
 
             @Override
