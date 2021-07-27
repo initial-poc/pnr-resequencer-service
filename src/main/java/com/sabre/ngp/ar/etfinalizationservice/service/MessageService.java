@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +31,7 @@ public class MessageService {
     private final ThreadPoolExecutor threadPoolExecutor;
 
     public void handleMessage(List<OutboxEntity> entities)  {
+
         List<List<OutboxEntity>> subRecords=null;
         if(entities.size()>=maxThreadCount) {
 
@@ -39,18 +41,20 @@ public class MessageService {
         }else{
             subRecords=List.of(entities);
         }
+        LinkedList<List<OutboxEntity>> records= Lists.newLinkedList(subRecords);
         log.info("Number of chunks {} ",subRecords.size());
-        while(true){
+        while(records.size()!=0){
             log.info("queue size {} and active count {]",threadPoolExecutor.getQueue().remainingCapacity(),threadPoolExecutor.getActiveCount());
           if(  threadPoolExecutor.getQueue().remainingCapacity()==maxThreadCount){
               log.info("Threads are available for processing records");
-              subRecords.forEach( entity->threadPoolExecutor.execute(() ->doRelease(entity)));
+              threadPoolExecutor.execute(() -> doRelease(records.poll()));
+             // subRecords.forEach( entity->threadPoolExecutor.execute(() ->doRelease(entity)));
               break;
             }else{
               log.info("All threads are busy with task, waiting...");
           }
           try {
-              TimeUnit.MILLISECONDS.sleep(200);
+              TimeUnit.MILLISECONDS.sleep(100);
           }catch(Exception ex){
               log.error("error {}",ex.getMessage());
           }
