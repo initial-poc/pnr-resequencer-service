@@ -39,9 +39,10 @@ public class MessageService {
         }
         log.info("Number of chunks {} ",subRecords.size());
         while(true){
-          if(  threadPoolExecutor.getActiveCount()==0){
+            log.info("queue size {} and active count {]",threadPoolExecutor.getQueue().remainingCapacity(),threadPoolExecutor.getActiveCount());
+          if(  threadPoolExecutor.getQueue().remainingCapacity()==maxThreadCount){
               log.info("Threads are available for processing records");
-              subRecords.forEach( entity->threadPoolExecutor.execute(() ->publishRecord(entity)));
+              subRecords.forEach( entity->threadPoolExecutor.execute(() ->doRelease(entity)));
               break;
             }else{
               log.info("All threads are busy with task, waiting...");
@@ -57,31 +58,23 @@ public class MessageService {
     }
 
 
-    private  void publishRecord(List<OutboxEntity> entities){
-        log.info("Thread -> {} Number of Records {}",Thread.currentThread().getName(),entities.size());
-        entities.stream().forEach(this::doRelease);
-    }
 
-    private void doRelease(OutboxEntity entity) {
+    private void doRelease(List<OutboxEntity> entities) {
+        log.info("Thread -> {} Number of Records {}",Thread.currentThread().getName(),entities.size());
         Stopwatch doReleaseStopWatch = Stopwatch.createStarted();
-        PNRModel model = entity.buildEntity();
         try {
-            topicRule.processDestinations(model);
-            log.info("Publishing message {}", model);
+          //  topicRule.processDestinations(model);
+            log.info("Publishing message of size {}", entities.size());
             Stopwatch stopWatch = Stopwatch.createStarted();
-            publisher.publishMessage(model);
+            publisher.publishMessage(entities);
             stopWatch.stop();
-            log.info("Published message time taken -> {} and Message {}",  stopWatch,model);
-            updateOutboxStatus(entity, OutboxRecordStatus.COMPLETED);
+            log.info("Published message time taken -> {} of size Message {}",  stopWatch,entities.size());
+            spannerOutboxRepository.batchUpdate(entities, OutboxRecordStatus.COMPLETED);
         } catch (Exception ex) {
-            log.info("exception occurred while publishing message Error-> {} and message ->  ", model,ex.getMessage());
-            updateOutboxStatus(entity, OutboxRecordStatus.FAILED);
+            log.info("exception occurred while publishing message Error-> {} and message ->  ", ex.getMessage());
+            spannerOutboxRepository.batchUpdate(entities, OutboxRecordStatus.FAILED);
         }
         doReleaseStopWatch.stop();
-log.info("Total Time Taken -> {} to process record {}",doReleaseStopWatch,entity);
-    }
-
-    private void updateOutboxStatus(OutboxEntity outboxEntity, OutboxRecordStatus outboxRecordStatus) {
-        spannerOutboxRepository.update(outboxEntity,outboxRecordStatus);
+log.info("Total Time Taken -> {} to process record {}",doReleaseStopWatch,entities);
     }
 }

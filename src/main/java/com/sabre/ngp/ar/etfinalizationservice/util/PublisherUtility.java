@@ -32,6 +32,8 @@ public class PublisherUtility {
                 if (throwable instanceof ApiException) {
                     ApiException apiException = ((ApiException) throwable);
                     log.error("Exception while publishing the message : {} ", apiException.getMessage());
+
+
                 }
             }
 
