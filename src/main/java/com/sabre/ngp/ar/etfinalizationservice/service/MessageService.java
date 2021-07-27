@@ -33,7 +33,9 @@ public class MessageService {
         List<List<OutboxEntity>> subRecords=null;
         if(entities.size()>=maxThreadCount) {
 
-            subRecords = Lists.partition(entities, (entities.size() + 1) / maxThreadCount);
+            double ceil = Math.ceil((entities.size() +1)/ (maxThreadCount*1.0));
+
+            subRecords = Lists.partition(entities, (int)ceil);
         }else{
             subRecords=List.of(entities);
         }
@@ -75,6 +77,6 @@ public class MessageService {
             spannerOutboxRepository.batchUpdate(entities, OutboxRecordStatus.FAILED);
         }
         doReleaseStopWatch.stop();
-log.info("Total Time Taken -> {} to process record {}",doReleaseStopWatch,entities);
+log.info("Total Time Taken -> {} to process record {}",doReleaseStopWatch,entities.size());
     }
 }

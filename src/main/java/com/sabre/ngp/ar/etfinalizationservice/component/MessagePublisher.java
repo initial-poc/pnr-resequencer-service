@@ -36,17 +36,17 @@ private final Publisher pubsubPublisher;
         List<ApiFuture<String>> messageIdFutures = new ArrayList<>();
 
         Publisher publisher =null;
+        try{
+
         for(OutboxEntity entity: entities) {
             PNRModel model = entity.buildEntity();
-
-            try {
-                PubsubMessage pubsubMessage = getPubsubMessage(model);
-                ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
-                log.info("message added into publisher");
-                messageIdFutures.add(future);
-
+            PubsubMessage pubsubMessage = getPubsubMessage(model);
+            ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
+            log.info("message added into publisher");
+            messageIdFutures.add(future);
+        }
             } catch (Exception ex) {
-                log.error("Exception occurred while sending message ->{} Error -> {}", model, ex.getMessage());
+                log.error("Exception occurred while sending message  Error -> {}", ex.getMessage());
                 throw new RuntimeException(ex.getMessage());
             } finally {
                 try {
@@ -64,7 +64,7 @@ private final Publisher pubsubPublisher;
                 }
             }
         }
-    }
+
 
     private PubsubMessage getPubsubMessage(PNRModel model) {
         String message = convert(model);
