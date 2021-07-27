@@ -45,7 +45,7 @@ public class MessageService {
         log.info("Number of chunks {} ",records.size());
         while(records.size()!=0){
             log.info("queue size {} and active count {]",threadPoolExecutor.getQueue().remainingCapacity(),threadPoolExecutor.getActiveCount());
-          if(  threadPoolExecutor.getQueue().remainingCapacity()==maxThreadCount){
+          if( ( threadPoolExecutor.getQueue().remainingCapacity()<=maxThreadCount) && (threadPoolExecutor.getQueue().remainingCapacity()!=0)){
               log.info("Threads are available for processing records");
               threadPoolExecutor.execute(() -> doRelease(records.poll()));
              // subRecords.forEach( entity->threadPoolExecutor.execute(() ->doRelease(entity)));
