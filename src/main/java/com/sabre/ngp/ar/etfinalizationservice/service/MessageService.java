@@ -42,14 +42,13 @@ public class MessageService {
             subRecords=List.of(entities);
         }
         LinkedList<List<OutboxEntity>> records= Lists.newLinkedList(subRecords);
-        log.info("Number of chunks {} ",subRecords.size());
+        log.info("Number of chunks {} ",records.size());
         while(records.size()!=0){
             log.info("queue size {} and active count {]",threadPoolExecutor.getQueue().remainingCapacity(),threadPoolExecutor.getActiveCount());
           if(  threadPoolExecutor.getQueue().remainingCapacity()==maxThreadCount){
               log.info("Threads are available for processing records");
               threadPoolExecutor.execute(() -> doRelease(records.poll()));
              // subRecords.forEach( entity->threadPoolExecutor.execute(() ->doRelease(entity)));
-              break;
             }else{
               log.info("All threads are busy with task, waiting...");
           }
