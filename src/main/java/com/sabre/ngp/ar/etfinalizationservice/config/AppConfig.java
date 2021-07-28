@@ -63,7 +63,7 @@ public class AppConfig {
         log.info("Creating thread pool of size -> {}",maxThreadCount);
         ThreadPoolExecutor threadPoolExecutor =   new ThreadPoolExecutor(maxThreadCount, maxThreadCount,
                 0L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<Runnable>(200));
+                new LinkedBlockingQueue<Runnable>(500));
         return threadPoolExecutor;
     }
 
