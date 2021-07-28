@@ -32,6 +32,9 @@ public class AppConfig {
     @Value("${threadCount}")
     private Integer maxThreadCount;
 
+    @Value("${queueSize}")
+    private Integer queueSize;
+
     @Value("${pubsubBatchSize}")
     private long pubsubBatchSize;
 
@@ -63,7 +66,7 @@ public class AppConfig {
         log.info("Creating thread pool of size -> {}",maxThreadCount);
         ThreadPoolExecutor threadPoolExecutor =   new ThreadPoolExecutor(maxThreadCount, maxThreadCount,
                 0L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<Runnable>(500));
+                new LinkedBlockingQueue<Runnable>(queueSize));
         return threadPoolExecutor;
     }
 

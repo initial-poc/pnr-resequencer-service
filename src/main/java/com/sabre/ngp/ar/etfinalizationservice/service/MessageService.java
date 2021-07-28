@@ -34,7 +34,14 @@ public class MessageService {
 
     public void handleMessage(List<OutboxEntity> entities)  {
 
-        List<List<OutboxEntity>> subRecords=Lists.partition(entities, pubsubBatchSize);;
+        List<List<OutboxEntity>> subRecords=null;
+
+        if(entities.size()>maxThreadCount) {
+
+             subRecords = Lists.partition(entities, entities.size() / maxThreadCount);
+        }else{
+            subRecords= List.of(entities);
+        }
         log.info("Number of chunks {} ",subRecords.size());
             log.info("queue size {} and active count {]",threadPoolExecutor.getQueue().remainingCapacity(),threadPoolExecutor.getActiveCount());
           subRecords.forEach( entity->threadPoolExecutor.execute(() ->doRelease(entity)));
