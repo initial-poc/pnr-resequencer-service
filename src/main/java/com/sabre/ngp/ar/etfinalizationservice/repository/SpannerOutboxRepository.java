@@ -22,6 +22,8 @@ public class SpannerOutboxRepository {
     private final ThreadPoolExecutor threadPoolExecutor;
     @org.springframework.beans.factory.annotation.Value("${queryLimit:50}")
     private String queryLimit;
+    @org.springframework.beans.factory.annotation.Value("${threadCount}")
+    private Integer maxThreadCount;
 
     @org.springframework.beans.factory.annotation.Value("${pubsubBatchSize}")
     private int pubsubBatchSize;
@@ -34,7 +36,8 @@ public class SpannerOutboxRepository {
         int remainingCapacity=0;
          while(true){
              try {
-                 remainingCapacity = threadPoolExecutor.getQueue().remainingCapacity();
+              //   remainingCapacity = threadPoolExecutor.getQueue().remainingCapacity();
+                 remainingCapacity = (maxThreadCount-threadPoolExecutor.getActiveCount())*threadPoolExecutor.getQueue().remainingCapacity();
                  if(remainingCapacity!=0){
                      break;
                  }
