@@ -11,20 +11,41 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 
 public class SpannerOutboxRepository {
-
+    private final ThreadPoolExecutor threadPoolExecutor;
     @org.springframework.beans.factory.annotation.Value("${queryLimit:50}")
     private String queryLimit;
+
+    @org.springframework.beans.factory.annotation.Value("${pubsubBatchSize}")
+    private int pubsubBatchSize;
 
     private final DatabaseClient databaseClient;
     private static final String OUTBOX_SQL = "select * from outbox where created in (select  min(created) from OUTBOX  where status in (0,3) group by locator limit %s) limit %s";
 
     public List<OutboxEntity> getRecords() {
+
+        int remainingCapacity=0;
+         while(true){
+             try {
+                 remainingCapacity = threadPoolExecutor.getQueue().remainingCapacity();
+                 if(remainingCapacity!=0){
+                     break;
+                 }
+                 TimeUnit.MILLISECONDS.sleep(10);
+             }catch(Exception ex){
+                 log.info("exception while waiting {}",ex.getMessage());
+             }
+         }
+        int queryLimit = pubsubBatchSize * remainingCapacity;
+        log.info("Going to perform query with limit {}",queryLimit);
+
         Stopwatch stopwatch= Stopwatch.createStarted();
         ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, queryLimit,queryLimit)));
         List<OutboxEntity> outboxEntities = Lists.newArrayList();
