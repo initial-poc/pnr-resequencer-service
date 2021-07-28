@@ -63,7 +63,7 @@ public class AppConfig {
         log.info("Creating thread pool of size -> {}",maxThreadCount);
         ThreadPoolExecutor threadPoolExecutor =   new ThreadPoolExecutor(maxThreadCount, maxThreadCount,
                 0L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<Runnable>(maxThreadCount));
+                new LinkedBlockingQueue<Runnable>((int)pubsubBatchSize));
         return threadPoolExecutor;
     }
 
@@ -71,7 +71,7 @@ public class AppConfig {
     public BatchingSettings PubSubBatchConfiguration(){
         long requestBytesThreshold = 50000L; // default : 1 byte
 
-         Duration publishDelayThreshold = Duration.ofMillis(300); // default : 1 ms
+         Duration publishDelayThreshold = Duration.ofMillis(50); // default : 1 ms
 
         // Publish request get triggered based on request size, messages count & time since last
         // publish, whichever condition is met first.

@@ -24,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 public class MessageService {
     @Value("${threadCount}")
     private Integer maxThreadCount;
+    @Value("${pubsubBatchSize}")
+    private int pubsubBatchSize;
     private final SpannerOutboxRepository spannerOutboxRepository;
     private final MessagePublisher publisher;
     private final TopicRule topicRule;
@@ -32,18 +34,8 @@ public class MessageService {
 
     public void handleMessage(List<OutboxEntity> entities)  {
 
-        List<List<OutboxEntity>> subRecords=null;
-        if(entities.size()>=maxThreadCount) {
-
-            double ceil = Math.ceil((entities.size() +1)/ (maxThreadCount*1.0));
-
-            subRecords = Lists.partition(entities, (int)ceil);
-        }else{
-            subRecords=List.of(entities);
-        }
-      //  LinkedList<List<OutboxEntity>> records= Lists.newLinkedList(subRecords);
+        List<List<OutboxEntity>> subRecords=Lists.partition(entities, pubsubBatchSize);;
         log.info("Number of chunks {} ",subRecords.size());
-
             log.info("queue size {} and active count {]",threadPoolExecutor.getQueue().remainingCapacity(),threadPoolExecutor.getActiveCount());
           subRecords.forEach( entity->threadPoolExecutor.execute(() ->doRelease(entity)));
 
