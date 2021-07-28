@@ -19,12 +19,7 @@ public class GenericSpringBootApplication implements CommandLineRunner {
     @Autowired
     private OutboxPollerExecutor executor;
     public static void main(String[] args) {
-
-        List<Integer> l = IntStream.rangeClosed(1, 82).boxed().collect(Collectors.toList());
-        System.out.println(l.size());
-        System.out.println(Lists.partition(l,l.size()/5).size());
-
-//        SpringApplication.run(GenericSpringBootApplication.class, args);
+      SpringApplication.run(GenericSpringBootApplication.class, args);
     }
 
     @Override
