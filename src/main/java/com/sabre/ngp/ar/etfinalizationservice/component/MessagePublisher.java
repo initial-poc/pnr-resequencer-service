@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class MessagePublisher {
     private final Gson gson;
 
-
+    Publisher pubsubPublisher=getPublisher();
     @Value("${pubsubBatchSize}")
     private long pubsubBatchSize;
 
@@ -36,10 +36,12 @@ public class MessagePublisher {
         sendMessage(null,entities);
     }
 
+
+
     private void sendMessage(String topicName,List<OutboxEntity> entities)  {
         List<ApiFuture<String>> messageIdFutures = new ArrayList<>();
 
-        Publisher pubsubPublisher=getPublisher();
+
         try{
 
         for(OutboxEntity entity: entities) {
@@ -56,8 +58,8 @@ public class MessagePublisher {
                     List<String> messageIds = ApiFutures.allAsList(messageIdFutures).get();
                    log.info("Published {} messages with batch settings.",messageIds.size());
                    if(pubsubPublisher!=null) {
-                       pubsubPublisher.shutdown();
-                       pubsubPublisher.awaitTermination(1, TimeUnit.MINUTES);
+                      // pubsubPublisher.shutdown();
+                       //pubsubPublisher.awaitTermination(1, TimeUnit.MINUTES);
                    }
                 } catch (Exception ex) {
                     log.info("Exception occurred while shutdown the pubsub {}", ex.getMessage());
@@ -90,9 +92,9 @@ public class MessagePublisher {
 
 
     public BatchingSettings PubSubBatchConfiguration(){
-        long requestBytesThreshold = 2000000L; // default : 1 byte
+        long requestBytesThreshold = 50000L; // default : 1 byte
 
-        Duration publishDelayThreshold = Duration.ofMillis(5); // default : 1 ms
+        Duration publishDelayThreshold = Duration.ofMillis(2); // default : 1 ms
 
         // Publish request get triggered based on request size, messages count & time since last
         // publish, whichever condition is met first.

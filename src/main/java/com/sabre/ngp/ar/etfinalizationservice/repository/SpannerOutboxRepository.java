@@ -73,6 +73,7 @@ public class SpannerOutboxRepository {
     }
 
     public void batchUpdate(List<OutboxEntity> entities, OutboxRecordStatus status) {
+        Stopwatch stopwatch= Stopwatch.createStarted();
         log.info("total records to update {}",entities.size());
         List<Mutation> mutations = Lists.newArrayList();
         for (OutboxEntity entity : entities) {
@@ -86,6 +87,8 @@ public class SpannerOutboxRepository {
                     .build());
         }
         databaseClient.write(mutations);
+          stopwatch = stopwatch.stop();
+        log.info("Batch Update took {} to update records of {}",stopwatch,entities.size());
     }
 
     public void update(OutboxEntity entity, OutboxRecordStatus outboxRecordStatus) {
