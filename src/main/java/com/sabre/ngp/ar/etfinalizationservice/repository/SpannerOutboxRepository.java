@@ -37,9 +37,12 @@ public class SpannerOutboxRepository {
         int waitCount=1;
 
              try {
-                 log.info("remainingCapacity {}",remainingCapacity);
+                 log.info("remainingCapacity {}",threadPoolExecutor.getQueue().remainingCapacity());
                  if(threadPoolExecutor.getQueue().remainingCapacity()!=0){
                      queryLimit = threadPoolExecutor.getQueue().remainingCapacity();
+                 }else{
+                     log.info("in else");
+                     queryLimit=0;
                  }
 
              }catch(Exception ex){

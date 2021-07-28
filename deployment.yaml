@@ -38,6 +38,6 @@ spec:
           - name: queryLimit
             value: "100"      
           - name: pubsubBatchSize
-            value: "20"          
+            value: "40"          
       
             
