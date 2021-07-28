@@ -26,9 +26,12 @@ import java.util.concurrent.TimeUnit;
 public class MessagePublisher {
     private final Gson gson;
 
-    Publisher pubsubPublisher=getPublisher();
+   private final  Publisher pubsubPublisher;
+
     @Value("${pubsubBatchSize}")
     private long pubsubBatchSize;
+
+
 
     public void publishMessage(List<OutboxEntity> entities) throws InterruptedException, IOException {
 
@@ -51,7 +54,8 @@ public class MessagePublisher {
             messageIdFutures.add(future);
         }
             } catch (Exception ex) {
-                log.error("Exception occurred while sending message  Error -> {}", ex.getMessage());
+                log.error("Exception occurred while sending message  Error Message  -> {} Error ->", ex.getMessage(),ex);
+
                 throw new RuntimeException(ex.getMessage());
             } finally {
                 try {
