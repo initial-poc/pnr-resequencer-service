@@ -67,30 +67,5 @@ public class AppConfig {
         return threadPoolExecutor;
     }
 
-    @Bean("pubsubBatchSetting")
-    public BatchingSettings PubSubBatchConfiguration(){
-        long requestBytesThreshold = 50000L; // default : 1 byte
 
-         Duration publishDelayThreshold = Duration.ofMillis(50); // default : 1 ms
-
-        // Publish request get triggered based on request size, messages count & time since last
-        // publish, whichever condition is met first.
-        return
-                BatchingSettings.newBuilder()
-                        .setElementCountThreshold(pubsubBatchSize)
-                        .setRequestByteThreshold(requestBytesThreshold)
-                        .setDelayThreshold(publishDelayThreshold)
-                        .build();
-
-
-    }
-
-    @Bean("pubsubPublisher")
-    public Publisher getPublisher(BatchingSettings pubsubBatchSetting) throws IOException {
-        String topicName="projects/sab-ors-poc-sbx-01-9096/topics/itinerary-topic";
-        return Publisher.newBuilder(topicName)
-                //.setEndpoint("us-central1-pubsub.googleapis.com:443")
-                .setBatchingSettings(pubsubBatchSetting)
-                .build();
-    }
 }

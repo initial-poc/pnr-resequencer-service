@@ -9,10 +9,8 @@ import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.sabre.ngp.ar.etfinalizationservice.domainmodel.PNRModel;
 import com.sabre.ngp.ar.etfinalizationservice.entity.OutboxEntity;
-import com.sabre.ngp.ar.etfinalizationservice.util.PublisherUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.threeten.bp.Duration;
@@ -27,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class MessagePublisher {
     private final Gson gson;
-private final PublisherUtility publisherUtility;
-//private final Publisher pubsubPublisher;
+
+
     @Value("${pubsubBatchSize}")
     private long pubsubBatchSize;
 
