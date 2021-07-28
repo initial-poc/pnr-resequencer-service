@@ -92,7 +92,7 @@ public class MessagePublisher {
     public BatchingSettings PubSubBatchConfiguration(){
         long requestBytesThreshold = 2000000L; // default : 1 byte
 
-        Duration publishDelayThreshold = Duration.ofMillis(10); // default : 1 ms
+        Duration publishDelayThreshold = Duration.ofMillis(5); // default : 1 ms
 
         // Publish request get triggered based on request size, messages count & time since last
         // publish, whichever condition is met first.
