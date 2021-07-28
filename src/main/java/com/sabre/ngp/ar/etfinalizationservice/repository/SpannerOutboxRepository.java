@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class SpannerOutboxRepository {
     private final ThreadPoolExecutor threadPoolExecutor;
     @org.springframework.beans.factory.annotation.Value("${queryLimit:50}")
-    private String queryLimit;
+    private int queryLimit;
     @org.springframework.beans.factory.annotation.Value("${threadCount}")
     private Integer maxThreadCount;
 
@@ -35,25 +35,22 @@ public class SpannerOutboxRepository {
 
         int remainingCapacity=0;
         int waitCount=1;
-         while(true){
-             try {
-              //   remainingCapacity = threadPoolExecutor.getQueue().remainingCapacity();
-                 int totalQueueCapacity = pubsubBatchSize * maxThreadCount;
 
-                 remainingCapacity = totalQueueCapacity-threadPoolExecutor.getQueue().remainingCapacity();
-                 if(remainingCapacity!=0){
-                     break;
+             try {
+                 log.info("remainingCapacity {}",remainingCapacity);
+                 if(threadPoolExecutor.getQueue().remainingCapacity()!=0){
+                     queryLimit = threadPoolExecutor.getQueue().remainingCapacity();
                  }
-                 TimeUnit.MILLISECONDS.sleep(10);
+
              }catch(Exception ex){
                  log.info("exception while waiting {}",ex.getMessage());
              }
-         }
-        log.info("Going to perform query with limit {}",remainingCapacity);
-         log.info("main thread total waiting count {}",waitCount);
+
+
+        log.info("Going to perform query with limit {}",queryLimit);
 
         Stopwatch stopwatch= Stopwatch.createStarted();
-        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, remainingCapacity,remainingCapacity)));
+        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, queryLimit,queryLimit)));
         List<OutboxEntity> outboxEntities = Lists.newArrayList();
         while (rs.next()) {
             OutboxEntity entity = new OutboxEntity();
