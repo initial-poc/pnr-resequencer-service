@@ -34,10 +34,13 @@ public class SpannerOutboxRepository {
     public List<OutboxEntity> getRecords() {
 
         int remainingCapacity=0;
+        int waitCount=1;
          while(true){
              try {
               //   remainingCapacity = threadPoolExecutor.getQueue().remainingCapacity();
-                 remainingCapacity = (maxThreadCount-threadPoolExecutor.getActiveCount())*threadPoolExecutor.getQueue().remainingCapacity();
+                 int totalQueueCapacity = pubsubBatchSize * maxThreadCount;
+
+                 remainingCapacity = totalQueueCapacity-threadPoolExecutor.getQueue().remainingCapacity();
                  if(remainingCapacity!=0){
                      break;
                  }
@@ -46,11 +49,11 @@ public class SpannerOutboxRepository {
                  log.info("exception while waiting {}",ex.getMessage());
              }
          }
-        int queryLimit = pubsubBatchSize * remainingCapacity;
-        log.info("Going to perform query with limit {}",queryLimit);
+        log.info("Going to perform query with limit {}",remainingCapacity);
+         log.info("main thread total waiting count {}",waitCount);
 
         Stopwatch stopwatch= Stopwatch.createStarted();
-        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, queryLimit,queryLimit)));
+        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, remainingCapacity,remainingCapacity)));
         List<OutboxEntity> outboxEntities = Lists.newArrayList();
         while (rs.next()) {
             OutboxEntity entity = new OutboxEntity();
