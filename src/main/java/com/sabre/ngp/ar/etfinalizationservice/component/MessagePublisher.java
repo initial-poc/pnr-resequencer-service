@@ -13,12 +13,14 @@ import com.sabre.ngp.ar.etfinalizationservice.entity.OutboxEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.threeten.bp.Duration;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ import java.util.List;
 public class MessagePublisher {
     private final Gson gson;
 
-   private final  Publisher pubsubPublisher;
+
 
     @Value("${pubsubBatchSize}")
     private long pubsubBatchSize;
@@ -46,7 +48,7 @@ public class MessagePublisher {
 
     private void sendMessage(String topicName,List<OutboxEntity> entities)  {
         List<ApiFuture<String>> messageIdFutures = new ArrayList<>();
-
+        Publisher pubsubPublisher=  pubsubPublisher();
 
         try{
 
@@ -61,11 +63,11 @@ public class MessagePublisher {
                 throw new RuntimeException(ex.getMessage());
             } finally {
                 try {
-                    List<String> messageIds = ApiFutures.allAsList(messageIdFutures).get();
-                   log.info("Published {} messages with batch settings.",messageIds.size());
+                   // List<String> messageIds = ApiFutures.allAsList(messageIdFutures).get();
+                  // log.info("Published {} messages with batch settings.",messageIds.size());
                    if(pubsubPublisher!=null) {
-                      // pubsubPublisher.shutdown();
-                       //pubsubPublisher.awaitTermination(1, TimeUnit.MINUTES);
+                       pubsubPublisher.shutdown();
+                       pubsubPublisher.awaitTermination(1, TimeUnit.MINUTES);
                    }
                 } catch (Exception ex) {
                     log.info("Exception occurred while shutdown the pubsub {}", ex.getMessage());
@@ -93,5 +95,42 @@ public class MessagePublisher {
             log.error("Exception while converting record to json {}", e);
         }
         return result;
+    }
+
+
+
+
+
+
+    public BatchingSettings PubSubBatchConfiguration(){
+        long requestBytesThreshold = 50000L; // default : 1 byte
+
+        Duration publishDelayThreshold = Duration.ofMillis(1); // default : 1 ms
+
+        // Publish request get triggered based on request size, messages count & time since last
+        // publish, whichever condition is met first.
+        return
+                BatchingSettings.newBuilder()
+                        .setElementCountThreshold(pubsubBatchSize)
+                        .setRequestByteThreshold(requestBytesThreshold)
+                        .setDelayThreshold(publishDelayThreshold)
+                        .build();
+
+
+    }
+
+
+    public Publisher pubsubPublisher()  {
+        String topicName="projects/sab-ors-poc-sbx-01-9096/topics/itinerary-topic";
+        Publisher publisher=null;
+        try {
+            publisher = Publisher.newBuilder(topicName)
+                    //.setEndpoint("us-central1-pubsub.googleapis.com:443")
+                    .setBatchingSettings(PubSubBatchConfiguration())
+                    .build();
+        }catch(Exception ex){
+            log.error("Got error while creating publisher {}",ex.getMessage());
+        }
+        return publisher;
     }
 }

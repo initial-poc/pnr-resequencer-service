@@ -1,6 +1,6 @@
 package com.sabre.ngp.ar.etfinalizationservice.rule;
 
-import com.sabre.ngp.ar.etfinalizationservice.domainmodel.OutboxEntity;
+import com.sabre.ngp.ar.etfinalizationservice.entity.OutboxEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +19,6 @@ public class ETicketTopicRule implements  Rule{
 
     @Override
     public void execute(OutboxEntity pnrModel) {
-        pnrModel.getDestinations().add(eticketTopicName);
+        //pnrModel.getDestinations().add(eticketTopicName);
     }
 }

@@ -20,17 +20,7 @@ public class OutboxEntity {
     private String parentPnr;
 
 
-    public com.sabre.ngp.ar.etfinalizationservice.domainmodel.OutboxEntity buildEntity(){
-        com.sabre.ngp.ar.etfinalizationservice.domainmodel.OutboxEntity model= new com.sabre.ngp.ar.etfinalizationservice.domainmodel.OutboxEntity();
-        model.setPayload(this.getPayload());
-        model.setVersion(this.getVersion());
-        model.setParentPnr(this.getParentPnr());
-        model.setCreated(this.getCreated());
-        model.setStatus(this.getStatus());
-        model.setLocator(this.getLocator());
-        model.setUpdated(this.getUpdated());
-    return model;
-    }
+
 
     @Override
     public String toString() {

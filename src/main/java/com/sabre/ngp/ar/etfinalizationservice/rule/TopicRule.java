@@ -1,6 +1,6 @@
 package com.sabre.ngp.ar.etfinalizationservice.rule;
 
-import com.sabre.ngp.ar.etfinalizationservice.domainmodel.OutboxEntity;
+import com.sabre.ngp.ar.etfinalizationservice.entity.OutboxEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
