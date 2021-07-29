@@ -40,6 +40,6 @@ spec:
           - name: pubsubBatchSize
             value: "100"    
           - name: queueSize
-            value: "5"          
+            value: "200"          
       
             

@@ -34,52 +34,16 @@ public class MessageService {
 
         List<List<OutboxEntity>> subRecords = null;
 
-      /*  if (entities.size() > maxThreadCount) {
+        if (entities.size() > maxThreadCount) {
 
-            subRecords = Lists.partition(entities, pubsubBatchSize);
+            subRecords = Lists.partition(entities, entities.size() /maxThreadCount);
         } else {
             subRecords = List.of(entities);
-        }*/
-        log.info("queue size {} and active count {]", threadPoolExecutor.getQueue().remainingCapacity(), threadPoolExecutor.getActiveCount());
-        int remainingCapacity = getChunkSize(threadPoolExecutor);
-        if(entities.size()<remainingCapacity){
-            subRecords=List.of(entities);
-        }else{
-            double ceil = Math.ceil((entities.size() + 1) / remainingCapacity);
-            subRecords=Lists.partition(entities,(int)ceil);
         }
+
         log.info("Number of chunks {} ", subRecords.size());
-
-
-
         subRecords.forEach(entity -> threadPoolExecutor.execute(() -> doRelease(entity)));
-
-
     }
-
-
-private int getChunkSize( ThreadPoolExecutor threadPoolExecutor){
-    int remainingCapacity = 0;
-    int waitCount=0;
-
-    while(true){
-        remainingCapacity=  threadPoolExecutor.getQueue().remainingCapacity();
-        if(remainingCapacity==0){
-            log.info("waiting..");
-            try{
-                waitCount++;
-                TimeUnit.MILLISECONDS.sleep(20);
-            }catch (Exception ex){
-                log.info("exception while waiting {}",ex.getMessage());
-            }
-        }else{
-            break;
-        }
-    }
-    log.info("wait count {} and remaining {}",waitCount, remainingCapacity);
-    return
-            remainingCapacity;
-}
 
 
     private void doRelease(List<OutboxEntity> entities) {

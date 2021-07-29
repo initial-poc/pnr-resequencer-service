@@ -33,10 +33,6 @@ public class SpannerOutboxRepository {
 
     public List<OutboxEntity> getRecords() {
 
-        int remainingCapacity=0;
-        int waitCount=1;
-
-            /* try {
                  log.info("remainingCapacity {}",threadPoolExecutor.getQueue().remainingCapacity());
                  if(threadPoolExecutor.getQueue().remainingCapacity()!=0){
                      queryLimit = threadPoolExecutor.getQueue().remainingCapacity();
@@ -44,11 +40,6 @@ public class SpannerOutboxRepository {
                      log.info("in else");
                      queryLimit=0;
                  }
-
-             }catch(Exception ex){
-                 log.info("exception while waiting {}",ex.getMessage());
-             }*/
-
 
         log.info("Going to perform query with limit {}",queryLimit);
 
