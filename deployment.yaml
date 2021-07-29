@@ -21,11 +21,11 @@ spec:
           name: pnr-resequencer-service
           resources:
            limits:
-            cpu: "5"
-            memory: "2Gi"
+            cpu: "10"
+            memory: "4Gi"
            requests:
-            cpu: "5"
-            memory: "2Gi"
+            cpu: "10"
+            memory: "4Gi"
           volumeMounts:
           - name: pnr-resequencer
             mountPath: /var/secrets/google
