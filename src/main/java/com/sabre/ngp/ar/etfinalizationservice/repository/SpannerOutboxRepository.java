@@ -29,14 +29,14 @@ public class SpannerOutboxRepository {
     private int pubsubBatchSize;
 
     private final DatabaseClient databaseClient;
-    private static final String OUTBOX_SQL = "select * from outbox where created in (select  min(created) from OUTBOX  where status in (0,3) group by locator limit %s) limit %s";
+    private static final String OUTBOX_SQL = "select  * from OUTBOX  where status in (0,3) order by created limit %s";
 
     public List<OutboxEntity> getRecords() {
 
         int remainingCapacity=0;
         int waitCount=1;
 
-             try {
+            /* try {
                  log.info("remainingCapacity {}",threadPoolExecutor.getQueue().remainingCapacity());
                  if(threadPoolExecutor.getQueue().remainingCapacity()!=0){
                      queryLimit = threadPoolExecutor.getQueue().remainingCapacity();
@@ -47,13 +47,13 @@ public class SpannerOutboxRepository {
 
              }catch(Exception ex){
                  log.info("exception while waiting {}",ex.getMessage());
-             }
+             }*/
 
 
         log.info("Going to perform query with limit {}",queryLimit);
 
         Stopwatch stopwatch= Stopwatch.createStarted();
-        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, queryLimit,queryLimit)));
+        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, queryLimit)));
         List<OutboxEntity> outboxEntities = Lists.newArrayList();
         while (rs.next()) {
             OutboxEntity entity = new OutboxEntity();
@@ -74,7 +74,6 @@ public class SpannerOutboxRepository {
 
     public void batchUpdate(List<OutboxEntity> entities, OutboxRecordStatus status) {
         Stopwatch stopwatch= Stopwatch.createStarted();
-        log.info("total records to update {}",entities.size());
         List<Mutation> mutations = Lists.newArrayList();
         for (OutboxEntity entity : entities) {
             mutations.add(Mutation.newUpdateBuilder("OUTBOX")

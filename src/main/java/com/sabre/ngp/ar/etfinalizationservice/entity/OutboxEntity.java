@@ -1,7 +1,6 @@
 package com.sabre.ngp.ar.etfinalizationservice.entity;
 
 import com.google.cloud.Timestamp;
-import com.sabre.ngp.ar.etfinalizationservice.domainmodel.PNRModel;
 import lombok.*;
 
 
@@ -21,8 +20,8 @@ public class OutboxEntity {
     private String parentPnr;
 
 
-    public PNRModel buildEntity(){
-        PNRModel model= new PNRModel();
+    public com.sabre.ngp.ar.etfinalizationservice.domainmodel.OutboxEntity buildEntity(){
+        com.sabre.ngp.ar.etfinalizationservice.domainmodel.OutboxEntity model= new com.sabre.ngp.ar.etfinalizationservice.domainmodel.OutboxEntity();
         model.setPayload(this.getPayload());
         model.setVersion(this.getVersion());
         model.setParentPnr(this.getParentPnr());
