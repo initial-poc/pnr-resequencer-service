@@ -120,14 +120,14 @@ public class MessagePublisher {
 
     private Publisher getPublisher()  {
         ExecutorProvider executorProvider =
-                InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(maxThreadCount).build();
+                InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(50).build();
         String topicName="projects/sab-ors-poc-sbx-01-9096/topics/itinerary-topic";
         Publisher publisher=null;
         try {
               publisher = Publisher.newBuilder(topicName)
                       .setExecutorProvider(executorProvider)
                     //.setEndpoint("us-central1-pubsub.googleapis.com:443")
-                   // .setBatchingSettings(PubSubBatchConfiguration())
+                    .setBatchingSettings(PubSubBatchConfiguration())
                     .build();
         }catch(Exception ex){
             log.error("Got error while creating publisher {}",ex.getMessage());
