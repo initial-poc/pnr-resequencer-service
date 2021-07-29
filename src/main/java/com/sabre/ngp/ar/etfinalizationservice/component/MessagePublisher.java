@@ -3,6 +3,8 @@ package com.sabre.ngp.ar.etfinalizationservice.component;
 import com.google.api.core.ApiFuture;
 import com.google.api.core.ApiFutures;
 import com.google.api.gax.batching.BatchingSettings;
+import com.google.api.gax.core.ExecutorProvider;
+import com.google.api.gax.core.InstantiatingExecutorProvider;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
@@ -30,6 +32,9 @@ public class MessagePublisher {
 
     @Value("${pubsubBatchSize}")
     private long pubsubBatchSize;
+
+    @Value("${threadCount}")
+    private Integer maxThreadCount;
 
 
 
@@ -114,12 +119,15 @@ public class MessagePublisher {
 
 
     private Publisher getPublisher()  {
+        ExecutorProvider executorProvider =
+                InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(maxThreadCount).build();
         String topicName="projects/sab-ors-poc-sbx-01-9096/topics/itinerary-topic";
         Publisher publisher=null;
         try {
               publisher = Publisher.newBuilder(topicName)
+                      .setExecutorProvider(executorProvider)
                     //.setEndpoint("us-central1-pubsub.googleapis.com:443")
-                    .setBatchingSettings(PubSubBatchConfiguration())
+                   // .setBatchingSettings(PubSubBatchConfiguration())
                     .build();
         }catch(Exception ex){
             log.error("Got error while creating publisher {}",ex.getMessage());
