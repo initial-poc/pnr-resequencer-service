@@ -64,6 +64,8 @@ public class AppConfig {
     @Bean("threadPoolExecutor")
     public ThreadPoolExecutor  pollerThreadExecutor(){
         log.info("Creating thread pool of size -> {}",maxThreadCount);
+        int cores = Runtime.getRuntime().availableProcessors();
+        log.info("Available core in machine {}",cores);
         ThreadPoolExecutor threadPoolExecutor =   new ThreadPoolExecutor(maxThreadCount, maxThreadCount,
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>(queueSize));
