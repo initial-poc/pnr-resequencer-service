@@ -5,6 +5,7 @@ import com.google.api.core.ApiFutures;
 import com.google.api.gax.batching.BatchingSettings;
 import com.google.api.gax.core.ExecutorProvider;
 import com.google.api.gax.core.InstantiatingExecutorProvider;
+import com.google.api.gax.retrying.RetrySettings;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
@@ -36,7 +37,7 @@ public class MessagePublisher {
     @Value("${threadCount}")
     private Integer maxThreadCount;
 
-
+   private final Publisher pubsubPublisher;
 
     public void publishMessage(List<OutboxEntity> entities) throws InterruptedException, IOException {
 
@@ -48,10 +49,9 @@ public class MessagePublisher {
 
     private void sendMessage(String topicName,List<OutboxEntity> entities)  {
         List<ApiFuture<String>> messageIdFutures = new ArrayList<>();
-        Publisher pubsubPublisher=  pubsubPublisher();
+
 
         try{
-
         for(OutboxEntity entity: entities) {
             PubsubMessage pubsubMessage = getPubsubMessage(entity);
             ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
@@ -66,8 +66,8 @@ public class MessagePublisher {
                    // List<String> messageIds = ApiFutures.allAsList(messageIdFutures).get();
                   // log.info("Published {} messages with batch settings.",messageIds.size());
                    if(pubsubPublisher!=null) {
-                       pubsubPublisher.shutdown();
-                       pubsubPublisher.awaitTermination(1, TimeUnit.MINUTES);
+                     //  pubsubPublisher.shutdown();
+                       //pubsubPublisher.awaitTermination(1, TimeUnit.MINUTES);
                    }
                 } catch (Exception ex) {
                     log.info("Exception occurred while shutdown the pubsub {}", ex.getMessage());
@@ -100,37 +100,4 @@ public class MessagePublisher {
 
 
 
-
-
-    public BatchingSettings PubSubBatchConfiguration(){
-        long requestBytesThreshold = 50000L; // default : 1 byte
-
-        Duration publishDelayThreshold = Duration.ofMillis(2); // default : 1 ms
-
-        // Publish request get triggered based on request size, messages count & time since last
-        // publish, whichever condition is met first.
-        return
-                BatchingSettings.newBuilder()
-                        .setElementCountThreshold(pubsubBatchSize)
-                        .setRequestByteThreshold(requestBytesThreshold)
-                        .setDelayThreshold(publishDelayThreshold)
-                        .build();
-
-
-    }
-
-
-    public Publisher pubsubPublisher()  {
-        String topicName="projects/sab-ors-poc-sbx-01-9096/topics/itinerary-topic";
-        Publisher publisher=null;
-        try {
-            publisher = Publisher.newBuilder(topicName)
-                    //.setEndpoint("us-central1-pubsub.googleapis.com:443")
-                    .setBatchingSettings(PubSubBatchConfiguration())
-                    .build();
-        }catch(Exception ex){
-            log.error("Got error while creating publisher {}",ex.getMessage());
-        }
-        return publisher;
-    }
 }
