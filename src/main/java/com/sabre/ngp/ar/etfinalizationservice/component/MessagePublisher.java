@@ -43,8 +43,6 @@ public class MessagePublisher {
    private final Publisher pubsubPublisher;
 
     public void publishMessage(List<OutboxEntity> entities) throws InterruptedException, IOException {
-
-   //model.getDestinations().stream().forEach(topicName ->sendMessage(topicName,model) );
         sendMessage(null,entities);
     }
 
@@ -58,37 +56,13 @@ public class MessagePublisher {
         for(OutboxEntity entity: entities) {
             PubsubMessage pubsubMessage = getPubsubMessage(entity);
             ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
-            ApiFutures.addCallback(
-                    future,
-                    new ApiFutureCallback<String>() {
-
-                        @Override
-                        public void onFailure(Throwable throwable) {
-                            if (throwable instanceof ApiException) {
-                                ApiException apiException = ((ApiException) throwable);
-                                // details on the API exception
-                                log.info("In failure callback {}",apiException.getStatusCode().getCode());
-                                log.info("apiException.isRetryable() {}",apiException.isRetryable());
-                            }
-                        }
-
-                        @Override
-                        public void onSuccess(String messageId) {
-                            // Once published, returns server-assigned message ids (unique within the topic)
-                            System.out.println("Published message ID: " + messageId);
-                        }
-                    },
-                    MoreExecutors.directExecutor());
             messageIdFutures.add(future);
         }
             } catch (Exception ex) {
                 log.error("Exception occurred while sending message  Error Message  -> {} Error ->", ex.getMessage(),ex);
-
                 throw new RuntimeException(ex.getMessage());
             } finally {
                 try {
-                   // List<String> messageIds = ApiFutures.allAsList(messageIdFutures).get();
-                  // log.info("Published {} messages with batch settings.",messageIds.size());
                    if(pubsubPublisher!=null) {
                      //  pubsubPublisher.shutdown();
                        //pubsubPublisher.awaitTermination(1, TimeUnit.MINUTES);
