@@ -1,12 +1,15 @@
 package com.sabre.ngp.ar.etfinalizationservice.component;
 
 import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutureCallback;
 import com.google.api.core.ApiFutures;
 import com.google.api.gax.batching.BatchingSettings;
 import com.google.api.gax.core.ExecutorProvider;
 import com.google.api.gax.core.InstantiatingExecutorProvider;
 import com.google.api.gax.retrying.RetrySettings;
+import com.google.api.gax.rpc.ApiException;
 import com.google.cloud.pubsub.v1.Publisher;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
@@ -55,6 +58,27 @@ public class MessagePublisher {
         for(OutboxEntity entity: entities) {
             PubsubMessage pubsubMessage = getPubsubMessage(entity);
             ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
+            ApiFutures.addCallback(
+                    future,
+                    new ApiFutureCallback<String>() {
+
+                        @Override
+                        public void onFailure(Throwable throwable) {
+                            if (throwable instanceof ApiException) {
+                                ApiException apiException = ((ApiException) throwable);
+                                // details on the API exception
+                                log.info("In failure callback {}",apiException.getStatusCode().getCode());
+                                log.info("apiException.isRetryable() {}",apiException.isRetryable());
+                            }
+                        }
+
+                        @Override
+                        public void onSuccess(String messageId) {
+                            // Once published, returns server-assigned message ids (unique within the topic)
+                            System.out.println("Published message ID: " + messageId);
+                        }
+                    },
+                    MoreExecutors.directExecutor());
             messageIdFutures.add(future);
         }
             } catch (Exception ex) {
