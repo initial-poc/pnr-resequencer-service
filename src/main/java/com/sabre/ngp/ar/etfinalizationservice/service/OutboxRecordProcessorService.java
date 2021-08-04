@@ -20,7 +20,7 @@ public class OutboxRecordProcessorService {
     private final SpannerOutboxRepository spannerOutboxRepository;
     private final String ip;
     private static final long POLLER_WAIT_TIME_FOR_NEXT_INTERVAL_IN_MILI_SEC= 1000;
-    private static final long POLLER_IMMEDIATE_EXECUTION_INTERVAL_IN_MILI_SEC= 0;
+    private static final long POLLER_IMMEDIATE_EXECUTION_INTERVAL_IN_MILI_SEC= 20;
 
     @Value("${batch.size.limit}")
     private Integer batchUpdateLimit;

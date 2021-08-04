@@ -36,12 +36,12 @@ public class MessageService {
 
         if (entities.size() > maxThreadCount) {
 
-            subRecords = Lists.partition(entities, 50);
+            subRecords = Lists.partition(entities, 10);
         } else {
             subRecords = List.of(entities);
         }
 
-        log.info("Number of chunks {} ", subRecords.size());
+        log.info("Number of chunks {}  and available queue size {}  and active thread {}", subRecords.size(),threadPoolExecutor.getQueue().remainingCapacity(),threadPoolExecutor.getActiveCount());
         subRecords.forEach(entity -> threadPoolExecutor.execute(() -> doRelease(entity)));
     }
 

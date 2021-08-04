@@ -29,7 +29,7 @@ public class SpannerOutboxRepository {
     private int pubsubBatchSize;
 
     private final DatabaseClient databaseClient;
-    private static final String OUTBOX_SQL = "select  * from OUTBOX  where status in (0,3) order by created limit %s";
+    private static final String OUTBOX_SQL = "select  * from OUTBOX  where status =0 order by created limit %s";
 
     public List<OutboxEntity> getRecords() {
 

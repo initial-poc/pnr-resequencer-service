@@ -34,7 +34,7 @@ spec:
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /var/secrets/google/key.json
           - name: threadCount
-            value: "20"
+            value: "60"
           - name: queryLimit
             value: "100"      
           - name: pubsubBatchSize
