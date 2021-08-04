@@ -65,6 +65,7 @@ public class MessagePublisher {
         }
 
 
+
     private PubsubMessage getPubsubMessage(OutboxEntity entity) {
         ByteString data = ByteString.copyFromUtf8(convert(entity));
         return PubsubMessage.newBuilder()
