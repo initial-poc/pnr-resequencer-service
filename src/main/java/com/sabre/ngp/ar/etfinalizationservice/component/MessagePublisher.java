@@ -43,9 +43,10 @@ public class MessagePublisher {
 
         try{
         for(OutboxEntity entity: entities) {
-            PubsubMessage pubsubMessage = getPubsubMessage(entity);
-            ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
-            messageIdFutures.add(future);
+          //  PubsubMessage pubsubMessage = getPubsubMessage(entity);
+            //ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
+            //messageIdFutures.add(future);
+
         }
             } catch (Exception ex) {
                 log.error("Exception occurred while sending message  Error Message  -> {} Error ->", ex.getMessage(),ex);
