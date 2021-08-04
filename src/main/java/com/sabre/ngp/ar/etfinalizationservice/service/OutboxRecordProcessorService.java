@@ -19,8 +19,8 @@ public class OutboxRecordProcessorService {
     private final MessageService outboxStatusService;
     private final SpannerOutboxRepository spannerOutboxRepository;
     private final String ip;
-    private static final long POLLER_WAIT_TIME_FOR_NEXT_INTERVAL_IN_MILI_SEC= 1000;
-    private static final long POLLER_IMMEDIATE_EXECUTION_INTERVAL_IN_MILI_SEC= 20;
+    private static final long POLLER_WAIT_TIME_FOR_NEXT_INTERVAL_IN_MILI_SEC= 20;
+    private static final long POLLER_IMMEDIATE_EXECUTION_INTERVAL_IN_MILI_SEC= 0;
 
     @Value("${batch.size.limit}")
     private Integer batchUpdateLimit;
@@ -37,7 +37,7 @@ public class OutboxRecordProcessorService {
         List<OutboxEntity> outboxEntities = spannerOutboxRepository.getRecords();
         if(outboxEntities.isEmpty()){
             log.info("=========   Record not found for processing =========");
-            return POLLER_IMMEDIATE_EXECUTION_INTERVAL_IN_MILI_SEC;
+            return POLLER_WAIT_TIME_FOR_NEXT_INTERVAL_IN_MILI_SEC;
         }
         doProcess(outboxEntities);
         return POLLER_IMMEDIATE_EXECUTION_INTERVAL_IN_MILI_SEC;
