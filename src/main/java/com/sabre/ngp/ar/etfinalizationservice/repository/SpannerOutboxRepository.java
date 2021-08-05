@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -31,8 +31,8 @@ public class SpannerOutboxRepository {
     private final DatabaseClient databaseClient;
     private static final String OUTBOX_SQL = "select  * from OUTBOX  where status =0 order by created limit %s";
 
-    public List<OutboxEntity> getRecords() {
-
+    public List<OutboxEntity> getRecords(Map<String,String> metaData) {
+        Stopwatch stopwatch= Stopwatch.createStarted();
                  log.info("remainingCapacity {}",threadPoolExecutor.getQueue().remainingCapacity());
                  if(threadPoolExecutor.getQueue().remainingCapacity()!=0){
                      queryLimit = threadPoolExecutor.getQueue().remainingCapacity();
@@ -43,8 +43,10 @@ public class SpannerOutboxRepository {
 
         log.info("Going to perform query with limit {}",queryLimit);
 
-        Stopwatch stopwatch= Stopwatch.createStarted();
+        Stopwatch queryStopWatch= Stopwatch.createStarted();
         ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, queryLimit)));
+        queryStopWatch=queryStopWatch.stop();
+        metaData.put("query_time",queryStopWatch.toString());
         List<OutboxEntity> outboxEntities = Lists.newArrayList();
         while (rs.next()) {
             OutboxEntity entity = new OutboxEntity();
@@ -59,25 +61,38 @@ public class SpannerOutboxRepository {
             outboxEntities.add(entity);
         }
         stopwatch=    stopwatch.stop();
+        metaData.put("query_to_dto",stopwatch.toString());
+        metaData.put("total_records",String.valueOf(outboxEntities.size()));
         log.info("Query took {} to get records of {}",stopwatch,outboxEntities.size());
         return outboxEntities;
     }
 
-    public void batchUpdate(List<OutboxEntity> entities, OutboxRecordStatus status) {
+    public void batchUpdate(List<OutboxEntity> entities, OutboxRecordStatus status, Map<String, String> metadata) {
         Stopwatch stopwatch= Stopwatch.createStarted();
         List<Mutation> mutations = Lists.newArrayList();
         for (OutboxEntity entity : entities) {
-            mutations.add(Mutation.newUpdateBuilder("OUTBOX")
+            Mutation.WriteBuilder builder = Mutation.newUpdateBuilder("OUTBOX")
                     .set("status")
                     .to(status.getStatusCode())
-                    .set("UPDATED")
-                    .to(Value.COMMIT_TIMESTAMP)
+
                     .set("locator").to(entity.getLocator()).
-                            set("version").to(entity.getVersion())
-                    .build());
+                            set("version").to(entity.getVersion());
+if(status.getStatusCode()==OutboxRecordStatus.COMPLETED.getStatusCode()){
+    builder .set("UPDATED")
+            .to(Value.COMMIT_TIMESTAMP)
+            .set("query_to_dto").to(metadata.get("query_to_dto"))
+            .set("pubsub_time").to(metadata.get("pubsub_time"))
+            .set("query_time").to(metadata.get("query_time"))
+            .set("total_records").to(metadata.get("total_records"));
+}else{
+    builder .set("updatedByPoller")
+            .to(Value.COMMIT_TIMESTAMP);
+}
+            mutations.add(builder.build());
         }
         databaseClient.write(mutations);
           stopwatch = stopwatch.stop();
+          metadata.put("batchUpdate"+status.getStatusCode(),stopwatch.toString());
         log.info("Batch Update took {} to update records of {}",stopwatch,entities.size());
     }
 

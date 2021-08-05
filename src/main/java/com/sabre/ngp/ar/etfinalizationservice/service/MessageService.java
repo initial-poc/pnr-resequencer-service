@@ -13,8 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -30,7 +30,7 @@ public class MessageService {
 
     private final ThreadPoolExecutor threadPoolExecutor;
 
-    public void handleMessage(List<OutboxEntity> entities) {
+    public void handleMessage(List<OutboxEntity> entities, Map<String, String> metadata) {
 
         List<List<OutboxEntity>> subRecords = null;
 
@@ -42,11 +42,11 @@ public class MessageService {
         }
 
         log.info("Number of chunks {}  and available queue size {}  and active thread {}", subRecords.size(),threadPoolExecutor.getQueue().remainingCapacity(),threadPoolExecutor.getActiveCount());
-        subRecords.forEach(entity -> threadPoolExecutor.execute(() -> doRelease(entity)));
+        subRecords.forEach(entity -> threadPoolExecutor.execute(() -> doRelease(entity,metadata)));
     }
 
 
-    private void doRelease(List<OutboxEntity> entities) {
+    private void doRelease(List<OutboxEntity> entities, Map<String, String> metadata) {
         log.info("Thread -> {} Number of Records {}", Thread.currentThread().getName(), entities.size());
         Stopwatch doReleaseStopWatch = Stopwatch.createStarted();
         try {
@@ -54,11 +54,12 @@ public class MessageService {
             Stopwatch stopWatch = Stopwatch.createStarted();
             publisher.publishMessage(entities);
             stopWatch.stop();
+            metadata.put("pubsub_time",stopWatch.toString());
             log.info("Published message time taken -> {} of size Message {}", stopWatch, entities.size());
-            spannerOutboxRepository.batchUpdate(entities, OutboxRecordStatus.COMPLETED);
+            spannerOutboxRepository.batchUpdate(entities, OutboxRecordStatus.COMPLETED, metadata);
         } catch (Exception ex) {
             log.info("exception occurred while publishing message Error-> {} and message ->  ", ex.getMessage());
-            spannerOutboxRepository.batchUpdate(entities, OutboxRecordStatus.FAILED);
+            spannerOutboxRepository.batchUpdate(entities, OutboxRecordStatus.FAILED, metadata);
         }
         doReleaseStopWatch.stop();
         log.info("Total Time Taken -> {} to process record {}", doReleaseStopWatch, entities.size());
