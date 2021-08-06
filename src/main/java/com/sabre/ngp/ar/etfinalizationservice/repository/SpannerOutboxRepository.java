@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -28,10 +30,14 @@ public class SpannerOutboxRepository {
     @org.springframework.beans.factory.annotation.Value("${pubsubBatchSize}")
     private int pubsubBatchSize;
 
+    private final Connection dbConnection;
+
     private final DatabaseClient databaseClient;
     private static final String OUTBOX_SQL = "select  locator,version,payload from OUTBOX_300_MOCK  where status  in (0,3) order by created limit %s";
 
-    public List<OutboxEntity> getRecords(Map<String,String> metaData) {
+    public List<OutboxEntity> getRecords(Map<String,String> metaData)throws Exception {
+
+
         Stopwatch stopwatch= Stopwatch.createStarted();
                 /* log.info("remainingCapacity {}",threadPoolExecutor.getQueue().remainingCapacity());
                  if(threadPoolExecutor.getQueue().remainingCapacity()!=0){
@@ -45,7 +51,9 @@ public class SpannerOutboxRepository {
 
 
         Stopwatch queryStopWatch= Stopwatch.createStarted();
-        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, "300")));
+        Statement statement = dbConnection.createStatement();
+        java.sql.ResultSet rs = statement.executeQuery("select  locator,version,payload from OUTBOX_300_MOCK  where status  in (0,3) order by created limit 1000");
+        // ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, "300")));
         queryStopWatch=queryStopWatch.stop();
         metaData.put("query_time",queryStopWatch.toString());
         List<OutboxEntity> outboxEntities = Lists.newArrayList();
@@ -61,6 +69,8 @@ public class SpannerOutboxRepository {
             entity.setStatus(rs.getLong("status"));*/
             outboxEntities.add(entity);
         }
+        rs.close();
+        statement.close();
         stopwatch=    stopwatch.stop();
         metaData.put("query_to_dto",stopwatch.toString());
         metaData.put("total_records",String.valueOf(outboxEntities.size()));

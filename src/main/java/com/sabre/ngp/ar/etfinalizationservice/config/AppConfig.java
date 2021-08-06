@@ -14,6 +14,8 @@ import org.springframework.context.annotation.Configuration;
 import org.threeten.bp.Duration;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -113,4 +115,14 @@ public class AppConfig {
         return publisher;
     }
 
+    @Bean("dbConnection")
+    public Connection dbConnection()throws  Exception {
+
+        String connectionUrl =
+                String.format(
+                        "jdbc:cloudspanner:/projects/%s/instances/%s/databases/%s",
+                        projectId, instanceId, databaseId);
+        return DriverManager.getConnection(connectionUrl);
+
+    }
 }

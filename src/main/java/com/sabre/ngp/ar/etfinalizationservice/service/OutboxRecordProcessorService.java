@@ -35,7 +35,7 @@ public class OutboxRecordProcessorService {
         ip = InetAddress.getLocalHost().getHostAddress();
     }
 
-    public long processRecords() {
+    public long processRecords() throws Exception{
         Map<String,String>medata= Maps.newHashMap();
         List<OutboxEntity> outboxEntities = spannerOutboxRepository.getRecords(medata);
         if(outboxEntities.isEmpty()){
