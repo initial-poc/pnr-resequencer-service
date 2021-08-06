@@ -29,7 +29,7 @@ public class SpannerOutboxRepository {
     private int pubsubBatchSize;
 
     private final DatabaseClient databaseClient;
-    private static final String OUTBOX_SQL = "select  locator,version,payload from OUTBOX  where status status in (0,3) order by created limit %s";
+    private static final String OUTBOX_SQL = "select  locator,version,payload from OUTBOX  where status  in (0,3) order by created limit %s";
 
     public List<OutboxEntity> getRecords(Map<String,String> metaData) {
         Stopwatch stopwatch= Stopwatch.createStarted();
