@@ -30,7 +30,7 @@ public class SpannerOutboxRepository {
 
 
     private final DatabaseClient databaseClient;
-    private static final String OUTBOX_SQL = "select  locator,version,payload from OUTBOX_SINGLE_VERSION  where status  in (0,3) order by created limit %s";
+    private static final String OUTBOX_SQL = "select  locator,version,payload from OUTBOX_MULTI_NODE  where status  in (0,3) order by created limit %s";
 
     public List<OutboxEntity> getRecords(Map<String,String> metaData)throws Exception {
 
@@ -75,7 +75,7 @@ public class SpannerOutboxRepository {
         Stopwatch stopwatch= Stopwatch.createStarted();
         List<Mutation> mutations = Lists.newArrayList();
         for (OutboxEntity entity : entities) {
-            Mutation.WriteBuilder builder = Mutation.newUpdateBuilder("OUTBOX_SINGLE_VERSION")
+            Mutation.WriteBuilder builder = Mutation.newUpdateBuilder("OUTBOX_MULTI_NODE")
                     .set("status")
                     .to(status.getStatusCode())
 
@@ -103,7 +103,7 @@ if(status.getStatusCode()==OutboxRecordStatus.COMPLETED.getStatusCode()){
     public void update(OutboxEntity entity, OutboxRecordStatus outboxRecordStatus) {
         List<Mutation> mutations =
                 Arrays.asList(
-                        Mutation.newUpdateBuilder("OUTBOX_SINGLE_VERSION")
+                        Mutation.newUpdateBuilder("OUTBOX_MULTI_NODE")
                                 .set("status")
                                 .to(outboxRecordStatus.getStatusCode())
                                 .set("UPDATED")
