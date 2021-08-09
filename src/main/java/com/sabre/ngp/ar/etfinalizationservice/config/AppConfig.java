@@ -14,8 +14,6 @@ import org.springframework.context.annotation.Configuration;
 import org.threeten.bp.Duration;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -83,9 +81,9 @@ public class AppConfig {
 
     @Bean("pubSubBatchConfiguration")
     public BatchingSettings pubSubBatchConfiguration(){
-        long requestBytesThreshold = 50000L; // default : 1 byte
+        long requestBytesThreshold = 10000000L; // default : 1 byte
 
-        Duration publishDelayThreshold = Duration.ofMillis(2); // default : 1 ms
+        Duration publishDelayThreshold = Duration.ofMillis(10); // default : 1 ms
 
         // Publish request get triggered based on request size, messages count & time since last
         // publish, whichever condition is met first.
@@ -115,14 +113,4 @@ public class AppConfig {
         return publisher;
     }
 
-    @Bean("dbConnection")
-    public Connection dbConnection()throws  Exception {
-
-        String connectionUrl =
-                String.format(
-                        "jdbc:cloudspanner:/projects/%s/instances/%s/databases/%s",
-                        projectId, instanceId, databaseId);
-        return DriverManager.getConnection(connectionUrl);
-
-    }
 }
