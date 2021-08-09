@@ -9,8 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.sql.Connection;
-import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -30,30 +28,27 @@ public class SpannerOutboxRepository {
     @org.springframework.beans.factory.annotation.Value("${pubsubBatchSize}")
     private int pubsubBatchSize;
 
-    private final Connection dbConnection;
 
     private final DatabaseClient databaseClient;
-    private static final String OUTBOX_SQL = "select  locator,version,payload from OUTBOX_300_MOCK  where status  in (0,3) order by created limit %s";
+    private static final String OUTBOX_SQL = "select  locator,version,payload from OUTBOX_SINGLE_VERSION  where status  in (0,3) order by created limit %s";
 
     public List<OutboxEntity> getRecords(Map<String,String> metaData)throws Exception {
 
 
         Stopwatch stopwatch= Stopwatch.createStarted();
-                /* log.info("remainingCapacity {}",threadPoolExecutor.getQueue().remainingCapacity());
+                 log.info("remainingCapacity {}",threadPoolExecutor.getQueue().remainingCapacity());
                  if(threadPoolExecutor.getQueue().remainingCapacity()!=0){
                      queryLimit = threadPoolExecutor.getQueue().remainingCapacity();
                  }else{
                      log.info("in else");
                      queryLimit=0;
-                 }*/
+                 }
 
        // log.info("Going to perform query with limit {}",queryLimit);
 
 
         Stopwatch queryStopWatch= Stopwatch.createStarted();
-        Statement statement = dbConnection.createStatement();
-        java.sql.ResultSet rs = statement.executeQuery("select  locator,version,payload from OUTBOX_300_MOCK  where status  in (0,3) order by created limit 1000");
-        // ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, "300")));
+         ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, queryLimit)));
         queryStopWatch=queryStopWatch.stop();
         metaData.put("query_time",queryStopWatch.toString());
         List<OutboxEntity> outboxEntities = Lists.newArrayList();
@@ -69,8 +64,6 @@ public class SpannerOutboxRepository {
             entity.setStatus(rs.getLong("status"));*/
             outboxEntities.add(entity);
         }
-        rs.close();
-        statement.close();
         stopwatch=    stopwatch.stop();
         metaData.put("query_to_dto",stopwatch.toString());
         metaData.put("total_records",String.valueOf(outboxEntities.size()));
@@ -82,7 +75,7 @@ public class SpannerOutboxRepository {
         Stopwatch stopwatch= Stopwatch.createStarted();
         List<Mutation> mutations = Lists.newArrayList();
         for (OutboxEntity entity : entities) {
-            Mutation.WriteBuilder builder = Mutation.newUpdateBuilder("OUTBOX_300_MOCK")
+            Mutation.WriteBuilder builder = Mutation.newUpdateBuilder("OUTBOX_SINGLE_VERSION")
                     .set("status")
                     .to(status.getStatusCode())
 
@@ -110,7 +103,7 @@ if(status.getStatusCode()==OutboxRecordStatus.COMPLETED.getStatusCode()){
     public void update(OutboxEntity entity, OutboxRecordStatus outboxRecordStatus) {
         List<Mutation> mutations =
                 Arrays.asList(
-                        Mutation.newUpdateBuilder("OUTBOX_300_MOCK")
+                        Mutation.newUpdateBuilder("OUTBOX_SINGLE_VERSION")
                                 .set("status")
                                 .to(outboxRecordStatus.getStatusCode())
                                 .set("UPDATED")
