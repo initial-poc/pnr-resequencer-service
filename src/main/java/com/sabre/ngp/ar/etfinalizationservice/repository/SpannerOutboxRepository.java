@@ -29,7 +29,7 @@ public class SpannerOutboxRepository {
     private int pubsubBatchSize;
 
     private final DatabaseClient databaseClient;
-    private static final String OUTBOX_SQL = "select  * from OUTBOX  where status =0 order by created limit %s";
+    private static final String OUTBOX_SQL = "select  * from OUTBOX_BATCH_PUBLISH  where status =0 order by created limit %s";
 
     public List<OutboxEntity> getRecords() {
 
@@ -67,7 +67,7 @@ public class SpannerOutboxRepository {
         Stopwatch stopwatch= Stopwatch.createStarted();
         List<Mutation> mutations = Lists.newArrayList();
         for (OutboxEntity entity : entities) {
-            mutations.add(Mutation.newUpdateBuilder("OUTBOX")
+            mutations.add(Mutation.newUpdateBuilder("OUTBOX_BATCH_PUBLISH")
                     .set("status")
                     .to(status.getStatusCode())
                     .set("UPDATED")
@@ -84,7 +84,7 @@ public class SpannerOutboxRepository {
     public void update(OutboxEntity entity, OutboxRecordStatus outboxRecordStatus) {
         List<Mutation> mutations =
                 Arrays.asList(
-                        Mutation.newUpdateBuilder("OUTBOX")
+                        Mutation.newUpdateBuilder("OUTBOX_BATCH_PUBLISH")
                                 .set("status")
                                 .to(outboxRecordStatus.getStatusCode())
                                 .set("UPDATED")
