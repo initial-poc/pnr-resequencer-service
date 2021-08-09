@@ -1,6 +1,7 @@
 package com.sabre.ngp.ar.etfinalizationservice.component;
 
 import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutures;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -43,23 +45,28 @@ public class MessagePublisher {
 
         try{
         for(OutboxEntity entity: entities) {
-          //  PubsubMessage pubsubMessage = getPubsubMessage(entity);
-            //ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
-            //messageIdFutures.add(future);
+            PubsubMessage pubsubMessage = getPubsubMessage(entity);
+            ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
+            messageIdFutures.add(future);
 
         }
             } catch (Exception ex) {
                 log.error("Exception occurred while sending message  Error Message  -> {} Error ->", ex.getMessage(),ex);
                 throw new RuntimeException(ex.getMessage());
             } finally {
+
                 try {
-                   if(pubsubPublisher!=null) {
-                     //  pubsubPublisher.shutdown();
-                       //pubsubPublisher.awaitTermination(1, TimeUnit.MINUTES);
-                   }
+                    List<String> messageIds = ApiFutures.allAsList(messageIdFutures).get();
+                    log.info("Published messages with batch settings {}" , messageIds.size() );
+
+                  /* if(pubsubPublisher!=null) {
+                      pubsubPublisher.shutdown();
+                       pubsubPublisher.awaitTermination(1, TimeUnit.MINUTES);
+                   }*/
                 } catch (Exception ex) {
                     log.info("Exception occurred while shutdown the pubsub {}", ex.getMessage());
                     ex.printStackTrace();
+                    throw new RuntimeException(ex.getMessage());
 
                 }
             }

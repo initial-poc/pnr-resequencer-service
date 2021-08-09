@@ -46,20 +46,7 @@ public class OutboxRecordProcessorService {
 
     private void doProcess(List<OutboxEntity> recordToProcess) {
         log.info("Total record -> {} to process by application->  {}", recordToProcess.size(), ip);
-        batchUpdateRecords(recordToProcess);
+        spannerOutboxRepository.batchUpdate(recordToProcess, OutboxRecordStatus.IN_PROGRESS);
         outboxStatusService.handleMessage(recordToProcess);
     }
-
-
-private void batchUpdateRecords(List<OutboxEntity> recordToProcess){
-    if(recordToProcess.size()>=batchUpdateLimit){
-        List<List<OutboxEntity>> subSets = Lists.partition(recordToProcess, batchUpdateLimit);
-        log.info("Record split the records {} ",subSets.size());
-        subSets.stream().forEach(entities -> spannerOutboxRepository.batchUpdate(entities, OutboxRecordStatus.IN_PROGRESS));
-    }else{
-        spannerOutboxRepository.batchUpdate(recordToProcess, OutboxRecordStatus.IN_PROGRESS);
-    }
-}
-
-
 }

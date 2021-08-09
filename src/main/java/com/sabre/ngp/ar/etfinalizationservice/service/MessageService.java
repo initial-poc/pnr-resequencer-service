@@ -36,7 +36,7 @@ public class MessageService {
 
         if (entities.size() > maxThreadCount) {
 
-            subRecords = Lists.partition(entities, 100);
+            subRecords = Lists.partition(entities, pubsubBatchSize);
         } else {
             subRecords = List.of(entities);
         }
