@@ -80,7 +80,8 @@ public class SpannerOutboxRepository {
                     .to(status.getStatusCode())
 
                     .set("locator").to(entity.getLocator()).
-                            set("version").to(entity.getVersion());
+                            set("version").to(entity.getVersion()).
+                    set("created").to(entity.getCreated());
 if(status.getStatusCode()==OutboxRecordStatus.COMPLETED.getStatusCode()){
     builder .set("UPDATED")
             .to(Value.COMMIT_TIMESTAMP)
