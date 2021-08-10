@@ -58,6 +58,7 @@ public class SpannerOutboxRepository {
             entity.setVersion(rs.getLong("version"));
             entity.setLocator(rs.getString("locator"));
             entity.setPayload(rs.getString("payload"));
+            entity.setCreated(rs.getTimestamp("created"));
          /*   if (!rs.isNull("parent_locator")) {
                 entity.setParentPnr(rs.getString("parent_locator"));
             }
