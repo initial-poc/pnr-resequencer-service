@@ -35,7 +35,7 @@ public class SpannerOutboxRepository {
     private final DatabaseClient databaseClient;
     private static final String OUTBOX_SQL = "select  locator,version,payload, created from %s  where status  in (0,3) order by created limit %s";
 
-    private static final String DELETE_SQL="DELETE from %s where status =2 and  TIMESTAMP_DIFF (current_timestamp,  updated,minute)>=60";
+    private static final String DELETE_SQL="DELETE from %s where status =2 and  TIMESTAMP_DIFF (current_timestamp,  updated,minute)>=30";
 
     public List<OutboxEntity> getRecords(Map<String,String> metaData)throws Exception {
 
@@ -111,8 +111,16 @@ if(status.getStatusCode()==OutboxRecordStatus.COMPLETED.getStatusCode()){
 
         Stopwatch queryStopWatch= Stopwatch.createStarted();
         String sql = String.format(DELETE_SQL, tableName);
-        log.info("delete query {}",sql);
-        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(sql));
+
+        databaseClient
+                .readWriteTransaction()
+                .run(transaction -> {
+                    long rowCount = transaction.executeUpdate(Statement.of(sql));
+                    log.info("Total rows deleted {}", rowCount);
+                    return null;
+                });
+
+
         queryStopWatch=queryStopWatch.stop();
         log.info("record delete is done with time taken {}",queryStopWatch);
 
