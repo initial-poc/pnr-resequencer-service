@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -33,7 +32,7 @@ public class SpannerOutboxRepository {
 
 
     private final DatabaseClient databaseClient;
-    private static final String OUTBOX_SQL = "select  locator,version,payload, created from %s  where status  in (0,3) order by created limit %s";
+    private static final String OUTBOX_SQL = "select  locator,version,payload from %s  where status  in (0,3) order by created limit %s";
 
     private static final String DELETE_SQL="DELETE from %s where status =2 and  TIMESTAMP_DIFF (current_timestamp,  updated,minute)>=30";
 
@@ -63,7 +62,6 @@ public class SpannerOutboxRepository {
             entity.setVersion(rs.getLong("version"));
             entity.setLocator(rs.getString("locator"));
             entity.setPayload(rs.getString("payload"));
-            entity.setCreated(rs.getTimestamp("created"));
          /*   if (!rs.isNull("parent_locator")) {
                 entity.setParentPnr(rs.getString("parent_locator"));
             }
@@ -86,8 +84,7 @@ public class SpannerOutboxRepository {
                     .to(status.getStatusCode())
 
                     .set("locator").to(entity.getLocator()).
-                            set("version").to(entity.getVersion()).
-                    set("created").to(entity.getCreated());
+                            set("version").to(entity.getVersion());
 if(status.getStatusCode()==OutboxRecordStatus.COMPLETED.getStatusCode()){
     builder .set("UPDATED")
             .to(Value.COMMIT_TIMESTAMP)
