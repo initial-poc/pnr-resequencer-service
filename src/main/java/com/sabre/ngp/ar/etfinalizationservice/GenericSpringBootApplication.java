@@ -20,6 +20,6 @@ public class GenericSpringBootApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-     //   executor.process();
+        executor.process();
     }
 }
