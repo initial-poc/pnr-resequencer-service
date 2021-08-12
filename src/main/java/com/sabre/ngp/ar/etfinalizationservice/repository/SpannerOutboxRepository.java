@@ -28,9 +28,14 @@ public class SpannerOutboxRepository {
     @org.springframework.beans.factory.annotation.Value("${pubsubBatchSize}")
     private int pubsubBatchSize;
 
+    @org.springframework.beans.factory.annotation.Value("${table.name}")
+    private String tableName;
+
 
     private final DatabaseClient databaseClient;
-    private static final String OUTBOX_SQL = "select  locator,version,payload, created from OUTBOX_CREATED_INDEX  where status  in (0,3) order by created limit %s";
+    private static final String OUTBOX_SQL = "select  locator,version,payload, created from %s  where status  in (0,3) order by created limit %s";
+
+    private static final String DELETE_SQL="DELETE from %s where status =2 and  TIMESTAMP_DIFF (current_timestamp,  updated,minute)>=60";
 
     public List<OutboxEntity> getRecords(Map<String,String> metaData)throws Exception {
 
@@ -48,7 +53,7 @@ public class SpannerOutboxRepository {
 
 
         Stopwatch queryStopWatch= Stopwatch.createStarted();
-         ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, queryLimit)));
+         ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL,tableName, queryLimit)));
         queryStopWatch=queryStopWatch.stop();
         metaData.put("query_time",queryStopWatch.toString());
         List<OutboxEntity> outboxEntities = Lists.newArrayList();
@@ -76,7 +81,7 @@ public class SpannerOutboxRepository {
         Stopwatch stopwatch= Stopwatch.createStarted();
         List<Mutation> mutations = Lists.newArrayList();
         for (OutboxEntity entity : entities) {
-            Mutation.WriteBuilder builder = Mutation.newUpdateBuilder("OUTBOX_CREATED_INDEX")
+            Mutation.WriteBuilder builder = Mutation.newUpdateBuilder(tableName)
                     .set("status")
                     .to(status.getStatusCode())
 
@@ -102,19 +107,14 @@ if(status.getStatusCode()==OutboxRecordStatus.COMPLETED.getStatusCode()){
         log.info("Batch Update took {} to update records of {}",stopwatch,entities.size());
     }
 
-    public void update(OutboxEntity entity, OutboxRecordStatus outboxRecordStatus) {
-        List<Mutation> mutations =
-                Arrays.asList(
-                        Mutation.newUpdateBuilder("OUTBOX_CREATED_INDEX")
-                                .set("status")
-                                .to(outboxRecordStatus.getStatusCode())
-                                .set("UPDATED")
-                                .to(Value.COMMIT_TIMESTAMP)
-                                .set("locator").to(entity.getLocator()).
-                                set("version").to(entity.getVersion())
-                                .build());
-        databaseClient.write(mutations);
+    public void delete() {
 
+        Stopwatch queryStopWatch= Stopwatch.createStarted();
+        String sql = String.format(DELETE_SQL, tableName);
+        log.info("delete query {}",sql);
+        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(sql));
+        queryStopWatch=queryStopWatch.stop();
+        log.info("record delete is done with time taken {}",queryStopWatch);
 
     }
 }
