@@ -34,7 +34,7 @@ public class SpannerOutboxRepository {
     private final DatabaseClient databaseClient;
     private static final String OUTBOX_SQL = "select  locator,version,payload from %s  where status  in (0,3) order by created limit %s";
 
-    private static final String DELETE_SQL="DELETE from %s where status =2 and  TIMESTAMP_DIFF (current_timestamp,  updated,minute)>=15";
+    private static final String DELETE_SQL="DELETE from %s where status =2 and  TIMESTAMP_DIFF (current_timestamp,  updated,second)>=60";
 
     public List<OutboxEntity> getRecords(Map<String,String> metaData)throws Exception {
 
