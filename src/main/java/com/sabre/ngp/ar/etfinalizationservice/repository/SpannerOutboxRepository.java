@@ -107,7 +107,7 @@ if(status.getStatusCode()==OutboxRecordStatus.COMPLETED.getStatusCode()){
     public void delete() {
 
         Stopwatch queryStopWatch= Stopwatch.createStarted();
-        String sql = String.format(DELETE_SQL, tableName);
+        String sql = String.format(DELETE_SQL, tableName,tableName);
 
         databaseClient
                 .readWriteTransaction()
