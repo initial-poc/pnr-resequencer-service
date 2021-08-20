@@ -115,7 +115,7 @@ public class SpannerOutboxRepository {
 
         List<OutboxLogEntity> records = getRecords();
         int recordToBeDeletedSize=records.size();
-        List<List<OutboxLogEntity>> partition = Lists.partition(records, (int) recordDeleteLimit);
+        List<List<OutboxLogEntity>> partition = Lists.partition(records, 10000);
 
       partition.stream().forEach(this::insertLogs);
         String sql = String.format(DELETE_SQL, tableName, tableName, recordDeleteLimit);
