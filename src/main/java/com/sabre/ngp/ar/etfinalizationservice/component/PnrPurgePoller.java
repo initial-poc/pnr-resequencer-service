@@ -15,5 +15,6 @@ private final SpannerOutboxRepository spannerOutboxRepository;
     public void purgePnr(){
       log.info("Purge Poller Started ....");
         spannerOutboxRepository.delete();
+
     }
 }
