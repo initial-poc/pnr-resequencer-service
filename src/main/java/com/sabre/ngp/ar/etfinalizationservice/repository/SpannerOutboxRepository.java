@@ -161,7 +161,7 @@ public class SpannerOutboxRepository {
 
         List<Mutation> mutations = Lists.newArrayList();
         for (OutboxLogEntity log : logs) {
-            Mutation build = Mutation.newInsertBuilder("OUTBOX_LOG")
+            Mutation build = Mutation.newInsertBuilder("OUTBOX_WITH_AUTO_PURGE_LOG_5_MIN")
                     .set("created").to(log.getCreated())
                     .set("total_records").to(log.getTotal_records())
                     .set("pubsub_time").to(log.getPubsub_time())
