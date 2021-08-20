@@ -126,6 +126,8 @@ public class SpannerOutboxRepository {
             if(tempRecordToBeDeleted>recordDeleteLimit){
                 tempDeleteCountLimit=recordDeleteLimit;
                 tempRecordToBeDeleted= tempRecordToBeDeleted-recordDeleteLimit;
+            }else{
+                tempDeleteCountLimit=tempRecordToBeDeleted;
             }
             String sql = String.format(DELETE_SQL, tableName, tableName, tempDeleteCountLimit);
             log.info("delete sql {}",sql);
