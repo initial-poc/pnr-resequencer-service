@@ -115,7 +115,7 @@ public class SpannerOutboxRepository {
 
         List<OutboxLogEntity> records = getRecords();
         int recordToBeDeletedSize=records.size();
-        List<List<OutboxLogEntity>> partition = Lists.partition(records, 10000);
+        List<List<OutboxLogEntity>> partition = Lists.partition(records, 1000);
 
       partition.stream().forEach(this::insertLogs);
         String sql = String.format(DELETE_SQL, tableName, tableName, recordDeleteLimit);
@@ -162,7 +162,7 @@ public class SpannerOutboxRepository {
     }
 
     private void insertLogs(List<OutboxLogEntity> logs) {
-
+log.info("going to insert records of size {}",logs.size());
         List<Mutation> mutations = Lists.newArrayList();
         for (OutboxLogEntity log : logs) {
             Mutation build = Mutation.newInsertBuilder("OUTBOX_WITH_AUTO_PURGE_LOG_5_MIN")
