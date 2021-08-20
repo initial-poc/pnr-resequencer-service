@@ -113,28 +113,38 @@ public class SpannerOutboxRepository {
     public void delete() {
         Stopwatch queryStopWatch = Stopwatch.createStarted();
 
+
         List<OutboxLogEntity> records = getRecords();
         int recordToBeDeletedSize=records.size();
-        List<List<OutboxLogEntity>> partition = Lists.partition(records, 1000);
+        long tempDeleteCountLimit=0,tempRecordToBeDeleted=recordToBeDeletedSize;
 
-      partition.stream().forEach(this::insertLogs);
-        String sql = String.format(DELETE_SQL, tableName, tableName, recordDeleteLimit);
-        log.info("delete sql {}",sql);
+
+
+
         long totalRecordDeleted = 0;
         while (true) {
+            if(tempRecordToBeDeleted>recordDeleteLimit){
+                tempDeleteCountLimit=recordDeleteLimit;
+                tempRecordToBeDeleted= tempRecordToBeDeleted-recordDeleteLimit;
+            }
+            String sql = String.format(DELETE_SQL, tableName, tableName, tempDeleteCountLimit);
+            log.info("delete sql {}",sql);
+
             Long deletedRowCount = databaseClient
                     .readWriteTransaction()
                     .run(transaction -> {
                         return transaction.executeUpdate(Statement.of(sql));
                     });
             totalRecordDeleted = totalRecordDeleted + deletedRowCount;
-            if (deletedRowCount < recordDeleteLimit) {
+            if (totalRecordDeleted>=recordToBeDeletedSize) {
                 break;
             }
         }
+        List<List<OutboxLogEntity>> partition = Lists.partition(records, 1000);
 
+        partition.stream().forEach(this::insertLogs);
         queryStopWatch = queryStopWatch.stop();
-        log.info("Total record inserted {} deleted {} with time taken {}", recordToBeDeletedSize, totalRecordDeleted, queryStopWatch);
+        log.info("Total record inserted {} deleted {} with time taken {} to complete process", recordToBeDeletedSize, totalRecordDeleted, queryStopWatch);
 
     }
 
