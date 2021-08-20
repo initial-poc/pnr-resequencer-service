@@ -42,6 +42,8 @@ spec:
           - name: queueSize
             value: "2000"      
           - name: table.name
-            value: "OUTBOX_WITH_AUTO_PURGE"          
+            value: "OUTBOX_WITH_AUTO_PURGE"    
+          - name: record.delete.limit
+            value: "18000"
       
             

@@ -31,6 +31,8 @@ public class MessagePublisher {
 
    private final Publisher pubsubPublisher;
 
+
+
     public void publishMessage(List<OutboxEntity> entities) throws InterruptedException, IOException {
         sendMessage(null,entities);
     }
