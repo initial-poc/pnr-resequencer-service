@@ -11,9 +11,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -31,6 +33,9 @@ public class SpannerOutboxRepository {
 
     @org.springframework.beans.factory.annotation.Value("${table.name}")
     private String tableName;
+
+    @org.springframework.beans.factory.annotation.Value("${log.table.name}")
+    private String logTableName;
 
     @org.springframework.beans.factory.annotation.Value("${record.delete.limit}")
     private long recordDeleteLimit;
@@ -110,6 +115,22 @@ public class SpannerOutboxRepository {
         log.info("Batch Update took {} to update records of {}", stopwatch, entities.size());
     }
 
+    public void deleteRecords() {
+        Stopwatch queryStopWatch = Stopwatch.createStarted();
+        List<OutboxLogEntity> records = getRecords();
+        long rowDeleted = 0,  recordSelectedCount=records.size();
+        List<List<OutboxLogEntity>> partition = Lists.partition(records, 1000);
+
+        for (List<OutboxLogEntity> entities : partition) {
+            rowDeleted = rowDeleted + batchDeleteRecords(entities);
+            insertLogs(entities);
+        }
+        queryStopWatch = queryStopWatch.stop();
+        log.info("Total record selected {} deleted {} with time taken {} to complete process", recordSelectedCount, rowDeleted, queryStopWatch);
+
+    }
+
+
     public void delete() {
         Stopwatch queryStopWatch = Stopwatch.createStarted();
 
@@ -174,10 +195,10 @@ public class SpannerOutboxRepository {
     }
 
     private void insertLogs(List<OutboxLogEntity> logs) {
-log.info("going to insert records of size {}",logs.size());
+        log.info("going to insert records of size {}", logs.size());
         List<Mutation> mutations = Lists.newArrayList();
         for (OutboxLogEntity log : logs) {
-            Mutation build = Mutation.newInsertBuilder("OUTBOX_WITH_AUTO_PURGE_LOG_5_MIN")
+            Mutation build = Mutation.newInsertBuilder(logTableName)
                     .set("created").to(log.getCreated())
                     .set("total_records").to(log.getTotal_records())
                     .set("pubsub_time").to(log.getPubsub_time())
@@ -192,4 +213,28 @@ log.info("going to insert records of size {}",logs.size());
         }
         databaseClient.write(mutations);
     }
+
+    private long batchDeleteRecords(List<OutboxLogEntity> entities) {
+        Type pnrType =
+                Type.struct(
+                        Arrays.asList(
+                                Type.StructField.of("locator", Type.string()),
+                                Type.StructField.of("version", Type.int64())));
+        List<Struct> pnrList = entities.stream().map(entity -> Struct.newBuilder().set("locator").to(entity.getLocator()).set("version").to(entity.getVersion()).build()).collect(Collectors.toList());
+        String deleteSql = "DELETE FROM %s WHERE STRUCT<locator STRING, version INT64>(locator, version) IN UNNEST(@names) ";
+
+        Statement s =
+                Statement.newBuilder(
+                        String.format(deleteSql, tableName))
+                        .bind("names")
+                        .toStructArray(pnrType, pnrList)
+                        .build();
+
+     return   databaseClient
+                .readWriteTransaction()
+                .run(transaction -> {
+                    return transaction.executeUpdate(s);
+                });
+    }
+
 }

@@ -34,16 +34,18 @@ spec:
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /var/secrets/google/key.json
           - name: threadCount
-            value: "200"
+            value: "5"
           - name: queryLimit
             value: "100"      
           - name: pubsubBatchSize
             value: "100"    
           - name: queueSize
-            value: "5000"      
+            value: "2000"      
           - name: table.name
-            value: "OUTBOX_WITH_FINE_TUNE_200_THREADS"    
+            value: "OUTBOX_WITH_FINE_TUNE_5_THREADS"    
           - name: record.delete.limit
             value: "18000"
+          - name: log.table.name
+            value: "OUTBOX_WITH_FINE_TUNE_5_THREADS_LOG"
       
             
