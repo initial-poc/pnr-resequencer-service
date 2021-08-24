@@ -34,7 +34,7 @@ spec:
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /var/secrets/google/key.json
           - name: threadCount
-            value: "5"
+            value: "10"
           - name: queryLimit
             value: "100"      
           - name: pubsubBatchSize
@@ -46,6 +46,6 @@ spec:
           - name: record.delete.limit
             value: "18000"
           - name: log.table.name
-            value: "OUTBOX_WITH_AUTO_PURGE_LOG_5_MIN"
+            value: "OUTBOX_WITH_AUTO_PURGE_LOG_5_MIN_10_THREADS"
       
             
