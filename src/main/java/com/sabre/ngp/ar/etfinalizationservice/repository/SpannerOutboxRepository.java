@@ -10,10 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
@@ -45,7 +42,7 @@ public class SpannerOutboxRepository {
     private static final String OUTBOX_SQL = "select  locator,version,payload from %s  where status  in (0,3) order by created limit %s";
 
     private static final String DELETE_SQL = "DELETE FROM %s WHERE LOCATOR IN(SELECT LOCATOR FROM %s WHERE status =2 and  TIMESTAMP_DIFF (current_timestamp,  UPDATED,MINUTE)>=5  limit %d) AND status =2 AND  TIMESTAMP_DIFF (current_timestamp,  UPDATED,minute)>=5";
-    private static final String SELECT_SQL = "SELECT locator, version,created ,total_records,updatedByPoller,updated ,query_to_dto,pubsub_time,query_time FROM %s WHERE status =2 and  TIMESTAMP_DIFF (current_timestamp,  UPDATED,MINUTE)>=5 ";
+    private static final String SELECT_SQL = "SELECT locator, version,created ,total_records,updatedByPoller,updated ,query_to_dto,pubsub_time,query_time FROM %s WHERE status =2 and  TIMESTAMP_DIFF (current_timestamp,  UPDATED,MINUTE)>=1 ";
 
     public List<OutboxEntity> getRecords(Map<String, String> metaData) throws Exception {
 
@@ -131,45 +128,6 @@ public class SpannerOutboxRepository {
     }
 
 
-    public void delete() {
-        Stopwatch queryStopWatch = Stopwatch.createStarted();
-
-
-        List<OutboxLogEntity> records = getRecords();
-        int recordToBeDeletedSize=records.size();
-        long tempDeleteCountLimit=0,tempRecordToBeDeleted=recordToBeDeletedSize;
-
-
-
-
-        long totalRecordDeleted = 0;
-        while (true) {
-            if(tempRecordToBeDeleted>recordDeleteLimit){
-                tempDeleteCountLimit=recordDeleteLimit;
-                tempRecordToBeDeleted= tempRecordToBeDeleted-recordDeleteLimit;
-            }else{
-                tempDeleteCountLimit=tempRecordToBeDeleted;
-            }
-            String sql = String.format(DELETE_SQL, tableName, tableName, tempDeleteCountLimit);
-            log.info("delete sql {}",sql);
-
-            Long deletedRowCount = databaseClient
-                    .readWriteTransaction()
-                    .run(transaction -> {
-                        return transaction.executeUpdate(Statement.of(sql));
-                    });
-            totalRecordDeleted = totalRecordDeleted + deletedRowCount;
-            if (totalRecordDeleted>=recordToBeDeletedSize) {
-                break;
-            }
-        }
-        List<List<OutboxLogEntity>> partition = Lists.partition(records, 1000);
-
-        partition.stream().forEach(this::insertLogs);
-        queryStopWatch = queryStopWatch.stop();
-        log.info("Total record inserted {} deleted {} with time taken {} to complete process", recordToBeDeletedSize, totalRecordDeleted, queryStopWatch);
-
-    }
 
     private List<OutboxLogEntity> getRecords() {
         List<OutboxLogEntity> records = new ArrayList<>();
@@ -207,12 +165,15 @@ public class SpannerOutboxRepository {
                     .set("query_to_dto").to(log.getQuery_to_dto())
                     .set("locator").to(log.getLocator())
                     .set("updatedByPoller").to(log.getUpdatedByPoller())
-                    .set("version").to(log.getVersion()).build();
+                    .set("version").to(log.getVersion())
+                    .set("pnr_id").to(UUID.randomUUID().toString())
+                            .build();
+
             mutations.add(build);
 
         }
-        databaseClient.write(mutations);
-    }
+    databaseClient.write(mutations);
+}
 
     private long batchDeleteRecords(List<OutboxLogEntity> entities) {
         Type pnrType =
@@ -230,7 +191,7 @@ public class SpannerOutboxRepository {
                         .toStructArray(pnrType, pnrList)
                         .build();
 
-     return   databaseClient
+      return   databaseClient
                 .readWriteTransaction()
                 .run(transaction -> {
                     return transaction.executeUpdate(s);
