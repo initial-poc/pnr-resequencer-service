@@ -46,6 +46,6 @@ spec:
           - name: record.delete.limit
             value: "18000"
           - name: log.table.name
-            value: "OUTBOX_WITH_PURGE_LOG_5_MIN_100_THREADS"
+            value: "OUTBOX_LOG"
       
             
