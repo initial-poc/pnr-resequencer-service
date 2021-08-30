@@ -1,8 +1,5 @@
 package com.sabre.ngp.ar.etfinalizationservice;
 
-import com.google.cloud.pubsub.v1.Publisher;
-import com.google.gson.Gson;
-import com.sabre.ngp.ar.etfinalizationservice.component.MessagePublisher;
 import com.sabre.ngp.ar.etfinalizationservice.component.OutboxPollerExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -25,6 +22,4 @@ public class GenericSpringBootApplication implements CommandLineRunner {
     public void run(String... args) throws Exception {
         executor.process();
     }
-
-
 }

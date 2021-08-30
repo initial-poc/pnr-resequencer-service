@@ -11,10 +11,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class PnrPurgePoller {
 private final SpannerOutboxRepository spannerOutboxRepository;
-   @Scheduled(fixedRate = 60000)
+   // @Scheduled(fixedRate = 1800000)
     public void purgePnr(){
       log.info("Purge Poller Started ....");
-       spannerOutboxRepository.deleteRecords();
-
+       // spannerOutboxRepository.delete();
     }
 }

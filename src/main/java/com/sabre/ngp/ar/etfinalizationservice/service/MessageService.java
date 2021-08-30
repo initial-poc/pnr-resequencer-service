@@ -1,5 +1,12 @@
 package com.sabre.ngp.ar.etfinalizationservice.service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.sabre.ngp.ar.etfinalizationservice.component.MessagePublisher;
@@ -7,19 +14,15 @@ import com.sabre.ngp.ar.etfinalizationservice.entity.OutboxEntity;
 import com.sabre.ngp.ar.etfinalizationservice.repository.SpannerOutboxRepository;
 import com.sabre.ngp.ar.etfinalizationservice.rule.TopicRule;
 import com.sabre.ngp.ar.etfinalizationservice.util.OutboxRecordStatus;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ThreadPoolExecutor;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class MessageService {
+    private static final String SECOND = " s";
     @Value("${threadCount}")
     private Integer maxThreadCount;
     @Value("${pubsubBatchSize}")
@@ -46,7 +49,7 @@ public class MessageService {
     }
 
 
-    private void doRelease(List<OutboxEntity> entities, Map<String, String> metadata) {
+    void doRelease(List<OutboxEntity> entities, Map<String, String> metadata) {
         log.info("Thread -> {} Number of Records {}", Thread.currentThread().getName(), entities.size());
         Stopwatch doReleaseStopWatch = Stopwatch.createStarted();
         try {
@@ -56,7 +59,12 @@ public class MessageService {
             stopWatch.stop();
             metadata.put("pubsub_time",stopWatch.toString());
             log.info("Published message time taken -> {} of size Message {}", stopWatch, entities.size());
-            spannerOutboxRepository.batchUpdate(entities, OutboxRecordStatus.COMPLETED, metadata);
+            //spannerOutboxRepository.batchUpdate(entities, OutboxRecordStatus.COMPLETED, metadata);
+            spannerOutboxRepository.deleteRecords(entities, OutboxRecordStatus.IN_PROGRESS, metadata);
+            metadata.forEach((k, v) -> {
+                if (v.contains(SECOND))
+                    log.info("### total time taken by query {} is {}", k, v);
+            });
         } catch (Exception ex) {
             log.info("exception occurred while publishing message Error-> {} and message ->  ", ex.getMessage());
             spannerOutboxRepository.batchUpdate(entities, OutboxRecordStatus.FAILED, metadata);
@@ -64,4 +72,7 @@ public class MessageService {
         doReleaseStopWatch.stop();
         log.info("Total Time Taken -> {} to process record {}", doReleaseStopWatch, entities.size());
     }
+
+
+
 }
