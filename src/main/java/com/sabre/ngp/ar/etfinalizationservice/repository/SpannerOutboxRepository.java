@@ -37,10 +37,18 @@ public class SpannerOutboxRepository {
     @org.springframework.beans.factory.annotation.Value("${record.delete.limit}")
     private long recordDeleteLimit;
 
+    @org.springframework.beans.factory.annotation.Value("${shard.value.start}")
+    private String startShardValue;
+
+    @org.springframework.beans.factory.annotation.Value("${shard.value.end}")
+    private String endShardValue;
+
+    @org.springframework.beans.factory.annotation.Value("${poller.time.difference.in.minute}")
+    private String timeDiffInMinute;
 
     private final DatabaseClient databaseClient;
-    private static final String OUTBOX_SQL = "select  locator,version,payload from %s  where status  in (0,3) order by created limit %s";
-
+    //private static final String OUTBOX_SQL = "select  locator,version,payload from %s  where status  in (0,3) order by created limit %s";
+    private static final String OUTBOX_SQL= "SELECT *  FROM %s @{FORCE_INDEX=PNREventShardIndex}    WHERE Status IN (0,3)  AND PNREventShardId BETWEEN '%s' AND '%s'    AND TIMESTAMP_DIFF (current_timestamp, created,minute)>=%s  ORDER BY created DESC limit %s";
     private static final String DELETE_SQL = "DELETE FROM %s WHERE LOCATOR IN(SELECT LOCATOR FROM %s WHERE status =2 and  TIMESTAMP_DIFF (current_timestamp,  UPDATED,MINUTE)>=5  limit %d) AND status =2 AND  TIMESTAMP_DIFF (current_timestamp,  UPDATED,minute)>=5";
     private static final String SELECT_SQL = "SELECT locator, version,created ,total_records,updatedByPoller,updated ,query_to_dto,pubsub_time,query_time FROM %s WHERE status =2 and  TIMESTAMP_DIFF (current_timestamp,  UPDATED,MINUTE)>=1 ";
 
@@ -60,7 +68,9 @@ public class SpannerOutboxRepository {
 
 
         Stopwatch queryStopWatch = Stopwatch.createStarted();
-        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL, tableName, queryLimit)));
+        String formattedSql = String.format(OUTBOX_SQL, tableName, startShardValue,endShardValue,timeDiffInMinute,queryLimit);
+        log.info("formatted sql {}",formattedSql);
+        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(formattedSql));
         queryStopWatch = queryStopWatch.stop();
         metaData.put("query_time", queryStopWatch.toString());
         List<OutboxEntity> outboxEntities = Lists.newArrayList();

@@ -47,5 +47,11 @@ spec:
             value: "18000"
           - name: log.table.name
             value: "OUTBOX_LOG"
+          - name: shard.value.start
+            value: "0"
+          - name: shard.value.end
+            value: "30"    
+          - name: poller.time.difference.in.minute
+            value: "1"          
       
             

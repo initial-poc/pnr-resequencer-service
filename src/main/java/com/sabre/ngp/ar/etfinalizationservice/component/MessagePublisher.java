@@ -46,7 +46,7 @@ public class MessagePublisher {
         try{
         for(OutboxEntity entity: entities) {
           //  PubsubMessage pubsubMessage = getPubsubMessage(entity);
-            //ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
+          //  ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
             //messageIdFutures.add(future);
 
         }
@@ -55,6 +55,7 @@ public class MessagePublisher {
                 throw new RuntimeException(ex.getMessage());
             } finally {
                 try {
+
                    if(pubsubPublisher!=null) {
                      //  pubsubPublisher.shutdown();
                        //pubsubPublisher.awaitTermination(1, TimeUnit.MINUTES);
