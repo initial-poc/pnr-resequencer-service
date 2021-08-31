@@ -62,9 +62,10 @@ public class MessageService {
             //spannerOutboxRepository.batchUpdate(entities, OutboxRecordStatus.COMPLETED, metadata);
             spannerOutboxRepository.deleteRecords(entities, OutboxRecordStatus.IN_PROGRESS, metadata);
             metadata.forEach((k, v) -> {
-                if (v.contains(SECOND))
+                if (v.contains(SECOND)) {
                     log.info("### total time taken by query {} is {}", k, v);
-                    log.info("### details are {}",metadata);
+                    log.info("### details are {}", metadata);
+                }
             });
         } catch (Exception ex) {
             log.info("exception occurred while publishing message Error-> {} and message ->  ", ex.getMessage());
