@@ -1,6 +1,7 @@
 package com.sabre.ngp.ar.etfinalizationservice.component;
 
 import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutures;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @Component
 @RequiredArgsConstructor
@@ -33,27 +35,32 @@ public class MessagePublisher {
 
 
 
-    public void publishMessage(List<OutboxEntity> entities) throws InterruptedException, IOException {
+    public void publishMessage(List<OutboxEntity> entities) throws InterruptedException, IOException,
+            ExecutionException {
         sendMessage(null,entities);
     }
 
 
 
-    private void sendMessage(String topicName,List<OutboxEntity> entities)  {
+    private void sendMessage(String topicName,List<OutboxEntity> entities)
+            throws ExecutionException, InterruptedException {
         List<ApiFuture<String>> messageIdFutures = new ArrayList<>();
 
 
         try{
         for(OutboxEntity entity: entities) {
-          //  PubsubMessage pubsubMessage = getPubsubMessage(entity);
-            //ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
-            //messageIdFutures.add(future);
+            PubsubMessage pubsubMessage = getPubsubMessage(entity);
+            ApiFuture<String> future = pubsubPublisher.publish(pubsubMessage);
+            messageIdFutures.add(future);
 
         }
             } catch (Exception ex) {
                 log.error("Exception occurred while sending message  Error Message  -> {} Error ->", ex.getMessage(),ex);
                 throw new RuntimeException(ex.getMessage());
             } finally {
+
+            List<String> messageIds = ApiFutures.allAsList(messageIdFutures).get();
+
                 try {
                    if(pubsubPublisher!=null) {
                      //  pubsubPublisher.shutdown();
