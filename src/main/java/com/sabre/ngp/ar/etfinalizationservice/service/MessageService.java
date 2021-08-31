@@ -64,6 +64,7 @@ public class MessageService {
             metadata.forEach((k, v) -> {
                 if (v.contains(SECOND))
                     log.info("### total time taken by query {} is {}", k, v);
+                    log.info("### details are {}",metadata);
             });
         } catch (Exception ex) {
             log.info("exception occurred while publishing message Error-> {} and message ->  ", ex.getMessage());
