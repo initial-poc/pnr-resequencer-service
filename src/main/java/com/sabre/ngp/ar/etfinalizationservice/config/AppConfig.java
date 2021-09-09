@@ -102,7 +102,7 @@ public class AppConfig {
 
     @Bean("pubsubPublisher")
     public Publisher pubsubPublisher( BatchingSettings pubSubBatchConfiguration)  {
-        String topicName="projects/sab-ors-poc-sbx-01-9096/topics/itinerary-topic";
+        String topicName="projects/sab-order-service-sbx-7006/topics/itinerary-topic";
         Publisher publisher=null;
         try {
             publisher = Publisher.newBuilder(topicName)
