@@ -76,7 +76,7 @@ public class SpannerOutboxRepository {
         List<OutboxEntity> outboxEntities = Lists.newArrayList();
         while (rs.next()) {
             OutboxEntity entity = new OutboxEntity();
-            // entity.setCreated(rs.getTimestamp("created"));
+             entity.setCreated(rs.getTimestamp("created"));
             entity.setVersion(rs.getLong("version"));
             entity.setLocator(rs.getString("locator"));
             entity.setPayload(rs.getString("payload"));
@@ -101,7 +101,8 @@ public class SpannerOutboxRepository {
                     .set("status")
                     .to(status.getStatusCode())
 
-                    .set("locator").to(entity.getLocator()).
+                    .set("locator").to(entity.getLocator())
+                            .set("created").to(entity.getCreated()).
                             set("version").to(entity.getVersion());
             if (status.getStatusCode() == OutboxRecordStatus.COMPLETED.getStatusCode()) {
                 builder.set("UPDATED")
