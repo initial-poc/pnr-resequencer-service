@@ -50,8 +50,6 @@ spec:
           - name: shard.value.start
             value: "0"
           - name: shard.value.end
-            value: "30"    
-          - name: poller.time.difference.in.minute
-            value: "1"          
+            value: "30"         
       
             
