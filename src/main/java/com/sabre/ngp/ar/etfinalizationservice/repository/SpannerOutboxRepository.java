@@ -93,7 +93,22 @@ public class SpannerOutboxRepository {
     }
 
     public void batchUpdate(List<OutboxEntity> entities, OutboxRecordStatus status, Map<String, String> metadata) {
+        List<List<OutboxEntity>> partition=null;
+        if(entities.size()>4000){
+            partition = Lists.partition(entities, 4000);
+        }else{
+       partition=     List.of(entities);
+        }
+
+
         Stopwatch stopwatch = Stopwatch.createStarted();
+        partition.stream().forEach(chunk -> update(chunk, status, metadata));
+        stopwatch=stopwatch.stop();
+        metadata.put("batchUpdate" + status.getStatusCode(), stopwatch.toString());
+        log.info("Batch Update took {} to update records of {}", stopwatch, entities.size());
+    }
+
+    private void update(List<OutboxEntity> entities, OutboxRecordStatus status, Map<String, String> metadata) {
         List<Mutation> mutations = Lists.newArrayList();
         for (OutboxEntity entity : entities) {
             Mutation.WriteBuilder builder = Mutation.newUpdateBuilder(tableName)
@@ -117,9 +132,6 @@ public class SpannerOutboxRepository {
             mutations.add(builder.build());
         }
         databaseClient.write(mutations);
-        stopwatch = stopwatch.stop();
-        metadata.put("batchUpdate" + status.getStatusCode(), stopwatch.toString());
-        log.info("Batch Update took {} to update records of {}", stopwatch, entities.size());
     }
 
     public void deleteRecords() {
