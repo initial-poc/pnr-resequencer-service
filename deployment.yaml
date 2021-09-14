@@ -50,6 +50,8 @@ spec:
           - name: shard.value.start
             value: "0"
           - name: shard.value.end
-            value: "30"         
+            value: "30"      
+          - name: shard
+            value: "0"          
       
             
