@@ -42,7 +42,7 @@ spec:
           - name: queueSize
             value: "5000"      
           - name: table.name
-            value: "OUTBOX_SHARD"    
+            value: "OUTBOX_SHARD_0"    
           - name: record.delete.limit
             value: "18000"
           - name: log.table.name
