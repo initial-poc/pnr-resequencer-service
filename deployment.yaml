@@ -17,7 +17,7 @@ spec:
         secret:
           secretName: pubsub-key    
       containers:
-        - image: gcr.io/sab-ors-poc-sbx-01-9096/pnr-resequencer-service:latest
+        - image: gcr.io/sab-order-service-sbx-7006/pnr-resequencer-service:latest
           name: pnr-resequencer-service
           resources:
            limits:
@@ -34,12 +34,18 @@ spec:
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /var/secrets/google/key.json
           - name: threadCount
-            value: "10"
+            value: "100"
           - name: queryLimit
             value: "100"      
           - name: pubsubBatchSize
             value: "100"    
           - name: queueSize
-            value: "2000"          
+            value: "5000"      
+          - name: table.name
+            value: "OUTBOX_WITH_AUTO_PURGE_WITH_NODE_3"    
+          - name: record.delete.limit
+            value: "18000"
+          - name: log.table.name
+            value: "OUTBOX_LOG_WITH_NODE_3"
       
             

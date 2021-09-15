@@ -8,12 +8,17 @@ import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.threeten.bp.Duration;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +43,10 @@ public class AppConfig {
     @Value("${pubsubBatchSize}")
     private long pubsubBatchSize;
 
+    @Autowired
+    private TopicComponent topicComponent;
+
+
     @Bean("databaseClient")
     public DatabaseClient getDatabaseClient() {
         SpannerOptions options = SpannerOptions.newBuilder().build();
@@ -50,7 +59,7 @@ public class AppConfig {
                     spanner.getDatabaseClient(DatabaseId.of(projectId, instanceId, databaseId));
 
         } catch (Exception ex) {
-            log.info("exception while building database client {}",ex.getMessage());
+            log.info("exception while building database client {}", ex.getMessage());
         }
         return dbClient;
     }
@@ -62,28 +71,21 @@ public class AppConfig {
 
 
     @Bean("threadPoolExecutor")
-    public ThreadPoolExecutor  pollerThreadExecutor(){
-        log.info("Creating thread pool of size -> {}",maxThreadCount);
+    public ThreadPoolExecutor pollerThreadExecutor() {
+        log.info("Creating thread pool of size -> {}", maxThreadCount);
         int cores = Runtime.getRuntime().availableProcessors();
-        log.info("Available core in machine {}",cores);
-        ThreadPoolExecutor threadPoolExecutor =   new ThreadPoolExecutor(maxThreadCount, maxThreadCount,
+        log.info("Available core in machine {}", cores);
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(maxThreadCount, maxThreadCount,
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>(queueSize));
         return threadPoolExecutor;
     }
 
-
-
-
-
-
-
-
     @Bean("pubSubBatchConfiguration")
-    public BatchingSettings pubSubBatchConfiguration(){
-        long requestBytesThreshold = 10000000L; // default : 1 byte
+    public BatchingSettings pubSubBatchConfiguration() {
+        long requestBytesThreshold = 50000L; // default : 1 byte
 
-        Duration publishDelayThreshold = Duration.ofMillis(10); // default : 1 ms
+        Duration publishDelayThreshold = Duration.ofMillis(2); // default : 1 ms
 
         // Publish request get triggered based on request size, messages count & time since last
         // publish, whichever condition is met first.
@@ -93,24 +95,31 @@ public class AppConfig {
                         .setRequestByteThreshold(requestBytesThreshold)
                         .setDelayThreshold(publishDelayThreshold)
                         .build();
-
-
     }
 
 
     @Bean("pubsubPublisher")
-    public Publisher pubsubPublisher( BatchingSettings pubSubBatchConfiguration)  {
-        String topicName="projects/sab-ors-poc-sbx-01-9096/topics/itinerary-topic";
-        Publisher publisher=null;
+    public Map<String, Publisher> pubsubPublisher(BatchingSettings pubSubBatchConfiguration) {
+        Map<String, Publisher> destinationTopicMap = new HashMap<>();
         try {
-            publisher = Publisher.newBuilder(topicName)
-                    //.setEndpoint("us-central1-pubsub.googleapis.com:443")
-                    .setBatchingSettings(pubSubBatchConfiguration)
-                    .build();
-        }catch(Exception ex){
-            log.error("Got error while creating publisher {}",ex.getMessage());
+            topicComponent.getName().entrySet().stream().forEach(e -> {
+                Publisher publisher = null;
+                try {
+                    publisher = Publisher.newBuilder(e.getValue())
+                            //.setEndpoint("us-central1-pubsub.googleapis.com:443")
+                            .setBatchingSettings(pubSubBatchConfiguration)
+                            .build();
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+                destinationTopicMap.put(e.getKey(), publisher);
+            });
+        } catch (Exception ex) {
+            log.error("Got error while creating publisher {}", ex.getMessage());
         }
-        return publisher;
+        return destinationTopicMap;
     }
 
+
+  
 }

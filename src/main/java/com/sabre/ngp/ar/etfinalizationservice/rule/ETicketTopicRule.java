@@ -7,10 +7,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class ETicketTopicRule implements  Rule{
     private static final String ETICKET_PAYLOAD_IDENTIFIER = "eticket";
-    @Value("${topic.name.eticket}")
-    private String eticketTopicName;
-
-
 
     @Override
     public boolean accept(OutboxEntity pnrModel) {
@@ -19,6 +15,6 @@ public class ETicketTopicRule implements  Rule{
 
     @Override
     public void execute(OutboxEntity pnrModel) {
-        //pnrModel.getDestinations().add(eticketTopicName);
+        pnrModel.getDestinations().add(ETICKET_PAYLOAD_IDENTIFIER);
     }
 }

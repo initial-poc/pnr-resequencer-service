@@ -11,7 +11,7 @@ spanner:
   database:
     id: database-1
   project:
-    id: sab-ors-poc-sbx-01-9096
+    id: sab-order-service-sbx-7006
 spring:
   application:
     name: et-finalization-service
@@ -19,7 +19,7 @@ spring:
 
 topic:
   name:
-    itinerary: projects/sab-ors-poc-sbx-01-9096/topics/itinerary-topic
-    teleType : projects/sab-ors-poc-sbx-01-9096/topics/teleType-topic
-    eticket : projects/sab-ors-poc-sbx-01-9096/topics/eticket-topic
+    itinerary: projects/sab-order-service-sbx-7006/topics/itinerary-topic
+    teleType : projects/sab-order-service-sbx-7006/topics/teleType-topic
+    eticket : projects/sab-order-service-sbx-7006/topics/eticket-topic
 
