@@ -7,20 +7,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class TeleTypeTopicRule implements Rule {
     private static final String TELETYPE_PAYLOAD_IDENTIFIER = "teleType";
-    @Value("${topic.name.teleType}")
-    private String teleTypeTopicName;
-
-
 
     @Override
     public boolean accept(OutboxEntity pnrModel) {
-return false;
-      //  return pnrModel.getPayload().contains(TELETYPE_PAYLOAD_IDENTIFIER);
+        return pnrModel.getPayload().contains(TELETYPE_PAYLOAD_IDENTIFIER);
     }
 
     @Override
     public void execute(OutboxEntity pnrModel) {
-      //  pnrModel.getDestinations().add(teleTypeTopicName);
+        pnrModel.getDestinations().add(TELETYPE_PAYLOAD_IDENTIFIER);
 
     }
 }
