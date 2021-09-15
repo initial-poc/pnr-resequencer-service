@@ -42,10 +42,10 @@ spec:
           - name: queueSize
             value: "5000"      
           - name: table.name
-            value: "OUTBOX_WITH_AUTO_PURGE"    
+            value: "OUTBOX_WITH_AUTO_PURGE_WITH_NODE_3"    
           - name: record.delete.limit
             value: "18000"
           - name: log.table.name
-            value: "OUTBOX_LOG"
+            value: "OUTBOX_LOG_WITH_NODE_3"
       
             
