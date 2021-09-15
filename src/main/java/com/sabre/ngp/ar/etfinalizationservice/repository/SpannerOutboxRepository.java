@@ -40,25 +40,25 @@ public class SpannerOutboxRepository {
 
 
         Stopwatch stopwatch= Stopwatch.createStarted();
-        log.info("remainingCapacity {}",threadPoolExecutor.getQueue().remainingCapacity());
-        if(threadPoolExecutor.getQueue().remainingCapacity()!=0){
-            queryLimit = threadPoolExecutor.getQueue().remainingCapacity();
-        }else{
-            log.info("in else");
-            queryLimit=0;
-        }
+                 log.info("remainingCapacity {}",threadPoolExecutor.getQueue().remainingCapacity());
+                 if(threadPoolExecutor.getQueue().remainingCapacity()!=0){
+                     queryLimit = threadPoolExecutor.getQueue().remainingCapacity();
+                 }else{
+                     log.info("in else");
+                     queryLimit=0;
+                 }
 
-        // log.info("Going to perform query with limit {}",queryLimit);
+       // log.info("Going to perform query with limit {}",queryLimit);
 
 
         Stopwatch queryStopWatch= Stopwatch.createStarted();
-        ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL,tableName, queryLimit)));
+         ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(String.format(OUTBOX_SQL,tableName, queryLimit)));
         queryStopWatch=queryStopWatch.stop();
         metaData.put("query_time",queryStopWatch.toString());
         List<OutboxEntity> outboxEntities = Lists.newArrayList();
         while (rs.next()) {
             OutboxEntity entity = new OutboxEntity();
-            // entity.setCreated(rs.getTimestamp("created"));
+           // entity.setCreated(rs.getTimestamp("created"));
             entity.setVersion(rs.getLong("version"));
             entity.setLocator(rs.getString("locator"));
             entity.setPayload(rs.getString("payload"));
@@ -85,22 +85,22 @@ public class SpannerOutboxRepository {
 
                     .set("locator").to(entity.getLocator()).
                             set("version").to(entity.getVersion());
-            if(status.getStatusCode()==OutboxRecordStatus.COMPLETED.getStatusCode()){
-                builder .set("UPDATED")
-                        .to(Value.COMMIT_TIMESTAMP)
-                        .set("query_to_dto").to(metadata.get("query_to_dto"))
-                        .set("pubsub_time").to(metadata.get("pubsub_time"))
-                        .set("query_time").to(metadata.get("query_time"))
-                        .set("total_records").to(metadata.get("total_records"));
-            }else{
-                builder .set("updatedByPoller")
-                        .to(Value.COMMIT_TIMESTAMP);
-            }
+if(status.getStatusCode()==OutboxRecordStatus.COMPLETED.getStatusCode()){
+    builder .set("UPDATED")
+            .to(Value.COMMIT_TIMESTAMP)
+            .set("query_to_dto").to(metadata.get("query_to_dto"))
+            .set("pubsub_time").to(metadata.get("pubsub_time"))
+            .set("query_time").to(metadata.get("query_time"))
+            .set("total_records").to(metadata.get("total_records"));
+}else{
+    builder .set("updatedByPoller")
+            .to(Value.COMMIT_TIMESTAMP);
+}
             mutations.add(builder.build());
         }
         databaseClient.write(mutations);
-        stopwatch = stopwatch.stop();
-        metadata.put("batchUpdate"+status.getStatusCode(),stopwatch.toString());
+          stopwatch = stopwatch.stop();
+          metadata.put("batchUpdate"+status.getStatusCode(),stopwatch.toString());
         log.info("Batch Update took {} to update records of {}",stopwatch,entities.size());
     }
 
