@@ -49,7 +49,7 @@ public class SpannerOutboxRepository {
 
     private final DatabaseClient databaseClient;
     //private static final String OUTBOX_SQL = "select  locator,version,payload from %s  where status  in (0,3) order by created limit %s";
-    private static final String OUTBOX_SQL= "SELECT *  FROM %s @{FORCE_INDEX=PNREventShardIndex_%s}    WHERE Status =0   ORDER BY created DESC limit %s";
+    private static final String OUTBOX_SQL= "SELECT *  FROM %s    WHERE Status =0   ORDER BY created DESC limit %s";
     private static final String DELETE_SQL = "DELETE FROM %s WHERE LOCATOR IN(SELECT LOCATOR FROM %s WHERE status =2 and  TIMESTAMP_DIFF (current_timestamp,  UPDATED,MINUTE)>=5  limit %d) AND status =2 AND  TIMESTAMP_DIFF (current_timestamp,  UPDATED,minute)>=5";
     private static final String SELECT_SQL = "SELECT locator, version,created ,total_records,updatedByPoller,updated ,query_to_dto,pubsub_time,query_time FROM %s WHERE status =2 and  TIMESTAMP_DIFF (current_timestamp,  UPDATED,MINUTE)>=1 ";
 
@@ -69,7 +69,7 @@ public class SpannerOutboxRepository {
 
 
         Stopwatch queryStopWatch = Stopwatch.createStarted();
-        String formattedSql = String.format(OUTBOX_SQL, tableName,shardValue,queryLimit);
+        String formattedSql = String.format(OUTBOX_SQL, tableName,queryLimit);
         log.info("formatted sql {}",formattedSql);
         ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(formattedSql));
         queryStopWatch = queryStopWatch.stop();
