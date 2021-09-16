@@ -57,11 +57,11 @@ public class SpannerOutboxRepository {
 
 
         Stopwatch stopwatch = Stopwatch.createStarted();
-        log.info("remainingCapacity {}", threadPoolExecutor.getQueue().remainingCapacity());
+       // log.info("remainingCapacity {}", threadPoolExecutor.getQueue().remainingCapacity());
         if (threadPoolExecutor.getQueue().remainingCapacity() != 0) {
             queryLimit = threadPoolExecutor.getQueue().remainingCapacity();
         } else {
-            log.info("in else");
+           // log.info("in else");
             queryLimit = 0;
         }
 
@@ -70,7 +70,7 @@ public class SpannerOutboxRepository {
 
         Stopwatch queryStopWatch = Stopwatch.createStarted();
         String formattedSql = String.format(OUTBOX_SQL, tableName,queryLimit);
-        log.info("formatted sql {}",formattedSql);
+       // log.info("formatted sql {}",formattedSql);
         ResultSet rs = databaseClient.singleUse().executeQuery(Statement.of(formattedSql));
         queryStopWatch = queryStopWatch.stop();
         metaData.put("query_time", queryStopWatch.toString());
@@ -90,7 +90,7 @@ public class SpannerOutboxRepository {
         stopwatch = stopwatch.stop();
         metaData.put("query_to_dto", stopwatch.toString());
         metaData.put("total_records", String.valueOf(outboxEntities.size()));
-        log.info("Query took {} to get records of {}", stopwatch, outboxEntities.size());
+       // log.info("Query took {} to get records of {}", stopwatch, outboxEntities.size());
         return outboxEntities;
     }
 
@@ -107,7 +107,7 @@ public class SpannerOutboxRepository {
         partition.stream().forEach(chunk -> update(chunk, status, metadata));
         stopwatch=stopwatch.stop();
         metadata.put("batchUpdate" + status.getStatusCode(), stopwatch.toString());
-        log.info("Batch Update took {} to update records of {}", stopwatch, entities.size());
+        //log.info("Batch Update took {} to update records of {}", stopwatch, entities.size());
     }
 
     private void update(List<OutboxEntity> entities, OutboxRecordStatus status, Map<String, String> metadata) {
@@ -147,7 +147,7 @@ public class SpannerOutboxRepository {
             insertLogs(entities);
         }
         queryStopWatch = queryStopWatch.stop();
-        log.info("Total record selected {} deleted {} with time taken {} to complete process", recordSelectedCount, rowDeleted, queryStopWatch);
+      //  log.info("Total record selected {} deleted {} with time taken {} to complete process", recordSelectedCount, rowDeleted, queryStopWatch);
 
     }
 
@@ -171,7 +171,7 @@ public class SpannerOutboxRepository {
             entity.setVersion(rs.getLong("version"));
             records.add(entity);
         }
-        log.info("Total Record found for delete {}", records.size());
+      //  log.info("Total Record found for delete {}", records.size());
 
         return records;
     }

@@ -16,9 +16,9 @@ public class OutboxPollerExecutor {
 
     public void process() throws Exception {
        while(true) {
-           log.info("Poller started at {}", LocalTime.now());
+      //     log.info("Poller started at {}", LocalTime.now());
            long nextPollerExecutionInterval = pollerOutboxRecordProcessorService.processRecords();
-           log.info("poller completed at {}", LocalTime.now());
+        //   log.info("poller completed at {}", LocalTime.now());
            try {
                Thread.sleep(nextPollerExecutionInterval);
            } catch (InterruptedException e) {

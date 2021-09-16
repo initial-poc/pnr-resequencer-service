@@ -39,7 +39,7 @@ public class OutboxRecordProcessorService {
         Map<String,String>medata= Maps.newHashMap();
         List<OutboxEntity> outboxEntities = spannerOutboxRepository.getRecords(medata);
         if(outboxEntities.isEmpty()){
-            log.info("=========   Record not found for processing =========");
+           // log.info("=========   Record not found for processing =========");
             return POLLER_WAIT_TIME_FOR_NEXT_INTERVAL_IN_MILI_SEC;
         }
         doProcess(outboxEntities,medata);
