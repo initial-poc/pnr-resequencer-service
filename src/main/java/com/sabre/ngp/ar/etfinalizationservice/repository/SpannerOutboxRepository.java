@@ -147,7 +147,7 @@ public class SpannerOutboxRepository {
             insertLogs(entities);
         }
         queryStopWatch = queryStopWatch.stop();
-      //  log.info("Total record selected {} deleted {} with time taken {} to complete process", recordSelectedCount, rowDeleted, queryStopWatch);
+        log.info("Total record selected {} deleted {} with time taken {} to complete process", recordSelectedCount, rowDeleted, queryStopWatch);
 
     }
 

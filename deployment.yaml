@@ -46,7 +46,7 @@ spec:
           - name: record.delete.limit
             value: "18000"
           - name: log.table.name
-            value: "OUTBOX_LOG"
+            value: "OUTBOX_SHARD_0_LOG"
           - name: shard.value.start
             value: "0"
           - name: shard.value.end
