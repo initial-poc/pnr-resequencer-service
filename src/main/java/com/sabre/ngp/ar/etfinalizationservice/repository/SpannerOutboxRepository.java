@@ -81,6 +81,7 @@ public class SpannerOutboxRepository {
             entity.setVersion(rs.getLong("version"));
             entity.setLocator(rs.getString("locator"));
             entity.setPayload(rs.getString("payload"));
+            entity.setPnrId(rs.getLong("pnr_id"));
          /*   if (!rs.isNull("parent_locator")) {
                 entity.setParentPnr(rs.getString("parent_locator"));
             }
@@ -114,6 +115,7 @@ public class SpannerOutboxRepository {
         List<Mutation> mutations = Lists.newArrayList();
         for (OutboxEntity entity : entities) {
             Mutation.WriteBuilder builder = Mutation.newUpdateBuilder(tableName)
+                    .set("pnr_id").to(entity.getPnrId())
                     .set("status")
                     .to(status.getStatusCode())
 
@@ -200,13 +202,9 @@ public class SpannerOutboxRepository {
 }
 
     private long batchDeleteRecords(List<OutboxLogEntity> entities) {
-        Type pnrType =
-                Type.struct(
-                        Arrays.asList(
-                                Type.StructField.of("locator", Type.string()),
-                                Type.StructField.of("version", Type.int64())));
-        List<Struct> pnrList = entities.stream().map(entity -> Struct.newBuilder().set("locator").to(entity.getLocator()).set("version").to(entity.getVersion()).build()).collect(Collectors.toList());
-        String deleteSql = "DELETE FROM %s WHERE STRUCT<locator STRING, version INT64>(locator, version) IN UNNEST(@names) ";
+        Type pnrType =  Type.struct(Arrays.asList(Type.StructField.of("pnr_id", Type.string())));
+        List<Struct> pnrList = entities.stream().map(entity -> Struct.newBuilder().set("pnr_id").to(entity.getPnr_id()).build()).collect(Collectors.toList());
+        String deleteSql = "DELETE FROM %s WHERE STRUCT<pnr_id INT64>(pnr_id) IN UNNEST(@names) ";
 
         Statement s =
                 Statement.newBuilder(

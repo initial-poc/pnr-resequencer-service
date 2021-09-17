@@ -10,6 +10,7 @@ import lombok.*;
 @Getter
 @Setter
 public class OutboxEntity {
+    private long pnrId;
     private String locator;
     private long version;
     private Timestamp created;

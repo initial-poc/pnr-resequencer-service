@@ -15,4 +15,5 @@ public class OutboxLogEntity {
     private Timestamp  created ;
     private Timestamp  updatedByPoller ;
     private Timestamp updated ;
+    private long pnr_id;
 }
